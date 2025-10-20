@@ -1,17 +1,10 @@
-import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Any, Optional
 from pydantic import BaseModel
 
-# # Equivalent of Go's fmt package for errors
-# from traceback import format_exc
-from models import Couple
-from utils import GetEnv
-class Song(BaseModel):
-    """Represents a registered song in the database."""
-    Title: str
-    Artist: str
-    YouTubeID: str
+from models.model import Couple, Song
+from utils.utils import GetEnv
+from db import NewMongoClient, NewSQLiteClient
 
 class DBClient(ABC):
     @abstractmethod
@@ -53,17 +46,6 @@ class DBClient(ABC):
 
 
 DBtype = GetEnv("DB_TYPE", "sqlite")
-
-# NOTE: In Python, the concrete client implementations (MongoClient, SQLiteClient) 
-# would typically be in separate files (mongo_client.py, sqlite_client.py), 
-# but for a direct file-to-file translation, we'll put the factory here.
-
-# Forward declarations for type hinting the return values
-# In a real Python app, you'd import these from their respective files.
-class MongoClient(DBClient): ...
-class SQLiteClient(DBClient): ...
-def NewMongoClient(uri: str) -> Tuple[Optional[MongoClient], Optional[Exception]]: ...
-def NewSQLiteClient(dataSourceName: str) -> Tuple[Optional[SQLiteClient], Optional[Exception]]: ...
 
 def NewDBClient() -> Tuple[Optional[DBClient], Optional[Exception]]:
     
