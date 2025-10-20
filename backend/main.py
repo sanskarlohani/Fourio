@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.router import api_router
 
 app = FastAPI(
     title="Furio API",
@@ -7,5 +8,8 @@ app = FastAPI(
 )
 
 @app.get("/")
-async def ping():
+async def root():
     return {"status": "Furio backend running"}
+
+
+app.include_router(api_router, prefix="/api/")
