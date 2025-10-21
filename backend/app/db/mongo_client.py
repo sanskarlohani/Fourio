@@ -5,9 +5,9 @@ from pymongo import MongoClient as PyMongoClient
 from pymongo import ASCENDING, errors as mongo_errors
 
 
-from db_client import DBClient, Song
+from db_clients import DBClient, Song
 from models.model import Couple
-from utils.utils import GenerateUniqueID, GenerateSongKey, GetEnv
+from utils.utils import GenerateUniqueID, GenerateSongKey
 
 # --- Constants ---
 DATABASE_NAME = "song-recognition"
@@ -169,7 +169,7 @@ class MongoClient(DBClient):
         except Exception as e:
             return Exception(f"error deleting collection: {e}")
         
-# --- factory function ---
+# --- factory method ---
 def NewMongoClient(uri: str) -> Tuple[Optional[MongoClient], Optional[Exception]]:
     try:
         client = PyMongoClient(uri)

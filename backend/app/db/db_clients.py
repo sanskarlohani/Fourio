@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Any, Optional
-from pydantic import BaseModel
 
 from models.model import Couple, Song
 from utils.utils import GetEnv

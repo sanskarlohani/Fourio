@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple, Any, Optional
 
 from db_clients import DBClient, Song
 from models.model import Couple
-from utils.utils import *
+from utils.utils import GenerateUniqueID, GenerateSongKey
 
 SQLITE_FILTER_KEYS = {"id", "ytID", "key"}
 SQLITE_CONSTRAINT_ERROR = 'UNIQUE constraint failed' # Common message for constraint error
