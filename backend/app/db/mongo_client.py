@@ -131,10 +131,9 @@ class MongoClient(DBClient):
             if not song_doc:
                 return None, False, None 
 
-            # Extract data. We rely on the 'key' being present as in the Go logic
             ytID = song_doc.get("ytID", "")
             key = song_doc.get("key", "")
-            title, artist = self._map_song_key(key) # Use helper for robust key splitting
+            title, artist = self._map_song_key(key) 
 
             song_instance = Song(
                 Title=title, 
