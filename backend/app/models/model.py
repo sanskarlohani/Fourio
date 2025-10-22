@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import NamedTuple   
 
 class Peak:
     Time: float  
@@ -21,3 +22,8 @@ class RecordData(BaseModel):
     channels: int
     SampleRate: int
     SampleSize: int
+
+class MaxPeakInfo(NamedTuple):
+    max_mag: float
+    max_freq: complex
+    freq_idx: int

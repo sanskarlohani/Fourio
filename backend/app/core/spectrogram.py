@@ -3,7 +3,7 @@ import math
 from typing import List, Tuple, Optional
 from fft import FFT 
 # from fft import NumPy_FFT as FFT 
-
+from models.model import Peak, MaxPeakInfo
 
 # TODO: For high-quality filtering and resampling would use scipy.signal,
 
@@ -114,3 +114,68 @@ def Spectrogram(sample: List[float], sample_rate: int) -> Tuple[List[List[comple
         spectrogram[i] = FFT(windowed_bin.tolist())
         
     return spectrogram, None
+
+
+
+
+#frequency bin ranges for peak extraction
+BANDS = [
+    (0, 10), (10, 20), (20, 40), (40, 80), 
+    (80, 160), (160, 512)
+]
+def ExtractPeaks(spectrogram: List[List[complex]], audio_duration: float) -> List[Peak]:
+    """
+    this specific method of peak extraction is called 
+    "Max-Magnitude Per Frequency Band" extraction
+    """
+    if len(spectrogram) < 1:
+        return []
+
+    peaks: List[Peak] = []
+    bin_duration = audio_duration / float(len(spectrogram))
+
+    for bin_idx, bin_data in enumerate(spectrogram):
+        bin_band_maxies: List[MaxPeakInfo] = []
+        
+        for band_min, band_max in BANDS:
+            max_mag = 0.0
+            max_info = MaxPeakInfo(0.0, complex(0,0), 0)
+          
+            band_slice = bin_data[band_min:band_max]
+            
+            for idx, freq in enumerate(band_slice):
+                magnitude = abs(freq)
+                
+                if magnitude > max_mag:
+                    max_mag = magnitude
+                    freq_idx = band_min + idx 
+                    max_info = MaxPeakInfo(magnitude, freq, freq_idx)
+                    
+            if max_mag > 0.0: 
+                bin_band_maxies.append(max_info)
+
+        if not bin_band_maxies:
+            continue
+
+        max_mags = [info.max_mag for info in bin_band_maxies]
+        avg_magnitude = sum(max_mags) / len(max_mags)
+
+        for info in bin_band_maxies:
+            if info.max_mag > avg_magnitude: 
+                #TODO
+                # Go: peakTimeInBin := freqIndices[i] * binDuration / float64(len(bin))
+                # Note: Go's logic seems to incorrectly use 'freqIndices[i]' which is a frequency index,
+                # to calculate a time offset *within* the bin. In standard DSP, the time offset is 
+                # generally considered zero, or based on the bin center. 
+                # Translating the Go logic directly:
+                
+                # The freqIdx is used as an arbitrary coefficient in the Go code.
+                peak_time_in_bin = float(info.freq_idx) * bin_duration / float(len(bin_data))
+
+                # Calculate the absolute time of the peak
+                # Go: peakTime := float64(binIdx)*binDuration + peakTimeInBin
+                peak_time = float(bin_idx) * bin_duration + peak_time_in_bin
+
+                peaks.append(Peak(Time=peak_time, Freq=info.max_freq))
+
+    return peaks
