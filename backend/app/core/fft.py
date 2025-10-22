@@ -34,10 +34,9 @@ def _recursive_fft(complex_array: List[complex]) -> List[complex]:
 
     return fft_result
 
+# converts a time-domain signal (real numbers) -> frequency domain.
 def FFT(input_data: List[float]) -> List[complex]:
-    """
-    converts a time-domain signal (real numbers) -> frequency domain.
-    """
+  
     complex_array = [complex(v, 0) for v in input_data]
     
     return _recursive_fft(complex_array)

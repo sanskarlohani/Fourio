@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
-from typing import Dict, List
 
+class Peak:
+    Time: float  
+    Freq: complex 
 class Song(BaseModel):
     """Represents a registered song in the database."""
     Title: str
