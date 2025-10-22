@@ -40,7 +40,14 @@ def LowPassFilter(cutoff_frequency: float, sample_rate: float, input_data: List[
     return filtered_signal.tolist()
 
 def Downsample(input_data: List[float], original_sample_rate: int, target_sample_rate: int) -> Tuple[List[float], Optional[Exception]]:
-    
+    """
+    According to the Nyquist-Shannon sampling theorem, 
+    we only need a sample rate slightly more than twice the highest frequency we care about. 
+    Since we've filtered out everything above 5kHz, 
+    a sample rate of around 10-12kHz is sufficient.
+
+    This help speed up the FFT and reduce the memory usage.
+    """
     if target_sample_rate <= 0 or original_sample_rate <= 0:
         return None, Exception("sample rates must be positive")
     
@@ -67,59 +74,43 @@ def Downsample(input_data: List[float], original_sample_rate: int, target_sample
     return resampled, None
 
 def Spectrogram(sample: List[float], sample_rate: int) -> Tuple[List[List[complex]], Optional[Exception]]:
-    """
-    Corresponds to the Go Spectrogram function, performing STFT.
-    """
-    
-    # 1. Pre-processing: Filter and Downsample
-    # Note: Using float(sample_rate) for consistency with Go's float64 cast
+   
     filtered_sample = LowPassFilter(MAX_FREQ, float(sample_rate), sample)
 
-    # Note: Downsample target is sampleRate/dspRatio, which is 4 in your code (e.g., 44100 -> 11025)
+    # here we downsample the audio (44100 -> 11025)
     target_sample_rate = sample_rate // DSP_RATIO
     downsampled_sample, err = Downsample(filtered_sample, sample_rate, target_sample_rate)
     
     if err:
         return None, Exception(f"couldn't downsample audio sample: {err}")
-    
     if not downsampled_sample:
         return [], None
         
     downsampled_np = np.array(downsampled_sample)
-    
-    # 2. Setup STFT Parameters
-    # Go: numOfWindows := len(downsampledSample) / (freqBinSize - hopSize)
+  
     window_shift = FREQ_BIN_SIZE - HOP_SIZE
     if window_shift <= 0: return None, Exception("Invalid hop size calculation")
     
-    # Calculate number of windows, ensuring at least one full window is covered
     total_samples = len(downsampled_np)
     if total_samples < FREQ_BIN_SIZE: return [], None
 
-    # Calculate num_windows based on the overlap (length - window_size) / hop_size + 1
+    # num_windows based on the overlap (length - window_size) / hop_size + 1
     num_windows = (total_samples - FREQ_BIN_SIZE) // HOP_SIZE + 1
     
     spectrogram: List[List[complex]] = [[]] * num_windows
 
-    # 3. Generate Window (Hamming/Hann equivalent)
-    # Go: 0.54 - 0.46*math.Cos(2*math.Pi*float64(i)/(float64(freqBinSize)-1))
-    # This is a general Hanning/Hamming-like window (specifically, the 0.54/0.46 is Hamming).
+  
+    # a general Hanning/Hamming-like window (specifically, the 0.54/0.46 is Hamming).
     window_indices = np.arange(FREQ_BIN_SIZE)
     window_func = 0.54 - 0.46 * np.cos(2 * math.pi * window_indices / (FREQ_BIN_SIZE - 1))
 
-    # 4. Perform STFT (Short-Time Fourier Transform)
+    # STFT (Short-Time Fourier Transform)
     for i in range(num_windows):
         start = i * HOP_SIZE
         end = start + FREQ_BIN_SIZE
         
-        # Extract the segment (bin)
         bin_data = downsampled_np[start:end]
-        
-        # Apply window (element-wise multiplication)
-        # Go: bin[j] *= window[j]
         windowed_bin = bin_data * window_func
-        
-        # Perform FFT (using the translated recursive function)
         spectrogram[i] = FFT(windowed_bin.tolist())
         
     return spectrogram, None
