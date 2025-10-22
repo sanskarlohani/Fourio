@@ -34,39 +34,32 @@ def LowPassFilter(cutoff_frequency: float, sample_rate: float, input_data: List[
             filtered_signal[i] = x * alpha
         else:
             filtered_signal[i] = alpha * x + (1 - alpha) * prev_output
-            
+
         prev_output = filtered_signal[i]
         
     return filtered_signal.tolist()
 
 def Downsample(input_data: List[float], original_sample_rate: int, target_sample_rate: int) -> Tuple[List[float], Optional[Exception]]:
-    """
-    Corresponds to the Go Downsample function (simple block averaging).
-    """
+    
     if target_sample_rate <= 0 or original_sample_rate <= 0:
         return None, Exception("sample rates must be positive")
+    
     if target_sample_rate > original_sample_rate:
         return None, Exception("target sample rate must be less than or equal to original sample rate")
 
     ratio = original_sample_rate / target_sample_rate
+
     if ratio <= 0 or not ratio.is_integer():
-        # In the Go code, ratio is an integer division, but here it must result in an integer
-        # for simple block averaging to work cleanly.
         return None, Exception("invalid ratio calculated from sample rates (must be an integer ratio)")
 
     ratio = int(ratio)
-    
-    resampled: List[float] = []
-    
-    # Simple block averaging downsampling (decimation)
+    resampled: List[float] = [] 
     input_np = np.array(input_data)
     N = len(input_np)
     
     for i in range(0, N, ratio):
-        # Go's start:end slice equivalent is a NumPy slice
         block = input_np[i : i + ratio]
         
-        # Go's sum/avg calculation equivalent
         if len(block) > 0:
             avg = np.sum(block) / len(block)
             resampled.append(avg)
