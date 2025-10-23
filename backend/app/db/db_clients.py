@@ -3,7 +3,8 @@ from typing import Dict, List, Tuple, Any, Optional
 
 from models.model import Couple, Song
 from utils.utils import GetEnv
-from db import NewMongoClient, NewSQLiteClient
+from db.mongo_client import NewMongoClient
+from db.sqlite_client import NewSQLiteClient
 
 class DBClient(ABC):
     @abstractmethod

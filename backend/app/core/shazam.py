@@ -41,45 +41,40 @@ def filter_matches(
     target_zones: Dict[int, Dict[int, int]]
 ) -> Dict[int, List[Tuple[int, int]]]:
     """
-    Corresponds to the Go filterMatches function.
     Filters out songs that don't have enough verified target zones.
     """
     
     # 1. Filter out non-target zones (count < TARGET_ZONE_SIZE)
-    # Note: Using list() of items allows safe deletion while iterating over a copy
     for song_id, anchor_times in target_zones.items():
         keys_to_delete = [anchor_time for anchor_time, count in anchor_times.items() 
                           if count < TARGET_ZONE_SIZE]
         for key in keys_to_delete:
              del target_zones[song_id][key]
 
-    # 2. Filter matches based on the number of remaining target zones
     filtered_matches: Dict[int, List[Tuple[int, int]]] = {}
     for song_id, zones in target_zones.items():
-        # Check if the number of remaining valid target zones meets the threshold
+        # if the number of remaining valid target zones meets the threshold
         if len(zones) >= threshold:
             filtered_matches[song_id] = matches[song_id]
 
     return filtered_matches
 
-# -----------------------------------------------------------------------------
 # --- Main Matcher Functions ---
 
 def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], float, Optional[Exception]]:
     """
-    Corresponds to the Go FindMatchesFGP function.
-    Uses the sample fingerprint (address -> sampleTime) to find and score matches in the database.
+    Uses the sample fingerprint (address -> sampleTime) 
+    to find and score matches in the database.
     """
     start_time = time.perf_counter()
     logger = GetLogger()
 
-    # 1. Prepare Addresses for DB Query
     addresses: List[int] = list(sample_fingerprint.keys())
 
     db_client, err = NewDBClient()
     if err: return None, time.perf_counter() - start_time, err
     
-    # Python's 'with' statement handles defer db.Close()
+    # 'with'  handles  db.Close()
     with db_client: 
         m, err = db_client.GetCouples(addresses) # Dict[address, List[Couple]]
         if err: return None, time.perf_counter() - start_time, err
@@ -91,7 +86,7 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
         # songID -> {timestamp: count} (Used for filterMatches)
         target_zones: Dict[int, Dict[int, int]] = {} 
 
-        # 2. Process Matches and Timing
+        # process Matches and Timing
         for address, couples in m.items():
             sample_time_ms = sample_fingerprint[address]
             
@@ -99,25 +94,23 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
                 song_id = couple.SongID
                 db_time_ms = couple.AnchorTimeMs
                 
-                # Record the time pair: (sampleTime, dbTime)
                 matches.setdefault(song_id, []).append((sample_time_ms, db_time_ms))
 
-                # Find the earliest timestamp (for final match output)
+                # find the earliest timestamp (for final match output)
                 if song_id not in timestamps or db_time_ms < timestamps[song_id]:
                     timestamps[song_id] = db_time_ms
 
-                # Count occurrences for target zone filtering
                 target_zones.setdefault(song_id, {}).setdefault(db_time_ms, 0)
                 target_zones[song_id][db_time_ms] += 1
 
-        # 3. Filter Matches (The Go code had this commented out)
+        # Filter Matches 
         # To enable filtering: matches = filter_matches(10, matches, target_zones)
 
-        # 4. Analyze Relative Timing (Scoring)
+        # analyze Relative Timing (Scoring)
         scores = analyze_relative_timing(matches)
         match_list: List[Match] = []
 
-        # 5. Build Final Match List
+        # Build Final Match List
         for song_id, score in scores.items():
             song, song_exists, err = db_client.GetSongByID(song_id)
             
@@ -138,7 +131,7 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
             )
             match_list.append(match)
 
-    # 6. Sort Matches by Score (Descending)
+    # sort Matches by Score 
     match_list.sort(key=lambda m: m.Score, reverse=True)
 
     return match_list, time.perf_counter() - start_time, None
