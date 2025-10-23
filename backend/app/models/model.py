@@ -4,11 +4,21 @@ from typing import NamedTuple
 class Peak:
     Time: float  
     Freq: complex 
+    
 class Song(BaseModel):
     """Represents a registered song in the database."""
     Title: str
     Artist: str
     YouTubeID: str
+    
+class Match(BaseModel):
+    """Represents a match found by the Shazam algorithm."""
+    SongID: int = Field(..., ge=0)
+    SongTitle: str
+    SongArtist: str
+    YouTubeID: str
+    Timestamp: int = Field(..., ge=0)
+    Score: float = Field(..., ge=0)
     
 class Couple(BaseModel):
     """Represents a time-frequency pair fingerprint."""
