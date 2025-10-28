@@ -47,13 +47,13 @@ def ConvertToWAV(input_file_path: str, channels: int) -> Tuple[Optional[str], Op
     output_file_path = input_path.with_suffix(".wav")
     tmp_file_path = input_path.parent / f"tmp_{output_file_path.name}"
     
-    # Ensure temporary file is cleaned up, even if an error occurs later
+    # cleaned up temp files
     def cleanup():
         if tmp_file_path.exists():
             os.remove(tmp_file_path)
             
     try:
-        # FFmpeg Command Construction (The Go exec.Command equivalent)
+        # FFmpeg Command Construction 
         command_args = [
             "-y",                                   # Overwrite output files without asking
             "-i", str(input_path),                  # Input file
@@ -82,7 +82,6 @@ def ConvertToWAV(input_file_path: str, channels: int) -> Tuple[Optional[str], Op
 
 def ReformatWAV(input_file_path: str, channels: int) -> Tuple[Optional[str], Optional[Exception]]:
     """
-    Corresponds to the Go ReformatWAV function.
     Converts a WAV file to mono or stereo (primarily used for forcing mono).
     """
     input_path = pathlib.Path(input_file_path)
