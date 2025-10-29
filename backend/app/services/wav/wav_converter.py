@@ -9,7 +9,7 @@ DEFAULT_SAMPLE_RATE = "44100"  # in Hz
 AUDIO_CODEC = "pcm_s16le"      # 16-bit Signed Little-Endian PCM (WAV Standard)
 
 
-def _validate_channels(channels: int) -> int:
+def validate_channels(channels: int) -> int:
     if channels < 1 or channels > 2:
         return 1
     return channels
@@ -41,7 +41,7 @@ def ConvertToWAV(input_file_path: str, channels: int) -> Tuple[Optional[str], Op
     if not input_path.exists():
         return None, Exception(f"Input file does not exist: {input_file_path}")
 
-    target_channels = _validate_channels(channels)
+    target_channels = validate_channels(channels)
     
     # 1. Define Output Paths (using pathlib for clean file operations)
     output_file_path = input_path.with_suffix(".wav")
@@ -88,7 +88,7 @@ def ReformatWAV(input_file_path: str, channels: int) -> Tuple[Optional[str], Opt
     if not input_path.exists():
         return None, Exception(f"Input file does not exist: {input_file_path}")
 
-    target_channels = _validate_channels(channels)
+    target_channels = validate_channels(channels)
 
     # Define Output Path (using rfm suffix as in Go)
     output_file_path = input_path.parent / f"{input_path.stem}rfm.wav"
