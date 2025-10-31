@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import NamedTuple   
-
+from dataclasses import dataclass
 class Peak:
     Time: float  
     Freq: complex 
@@ -37,3 +37,11 @@ class MaxPeakInfo(NamedTuple):
     max_mag: float
     max_freq: complex
     freq_idx: int
+
+@dataclass
+class Track:
+    Title: str
+    Artist: str
+    Album: str
+    Artists: list[str]
+    Duration: int
