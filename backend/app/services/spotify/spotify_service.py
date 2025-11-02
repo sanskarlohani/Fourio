@@ -9,12 +9,6 @@ from app.utils.utils import GetEnv
 from app.models.model import Track
 
 
-class ResourceEndpoint(NamedTuple):
-    Limit: int = 0
-    Offset: int = 0
-    TotalCount: int = 0
-    Requests: int = 0
-
 class Credentials(NamedTuple):
     ClientID: str
     ClientSecret: str
