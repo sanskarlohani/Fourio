@@ -7,7 +7,7 @@ from pathlib import Path
 
 from db.db_clients import NewDBClient
 from models.model import Track
-# from .spotify_client import TrackInfo, PlaylistInfo, AlbumInfo 
+from .spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
 from .youtube_service import GetYoutubeId  
 from utils.utils import GetLogger, GenerateSongKey
 from .utils import SongKeyExists, YtIDExists, correctFilename, GetFileSize
@@ -79,14 +79,14 @@ def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]
         f"https://www.youtube.com/watch?v={id}",
     ]
     
-    # Go's logic loops until fileSize > 0 (addressing intermittent download failures)
+    # loops until fileSize > 0 (addressing intermittent download failures)
     file_size = 0
     max_attempts = 3
     
     for attempt in range(max_attempts):
         try:
             subprocess.run(cmd, check=True, capture_output=True)
-            file_size, _ = GetFileSize(file_path) # Check file size
+            file_size, _ = GetFileSize(file_path) 
             
             if file_size > 0:
                 return None # Success
@@ -103,7 +103,7 @@ def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]
 
 
 def add_tags(file_path: str, track: Track) -> Optional[Exception]:
-    """Corresponds to the Go addTags function. Uses FFmpeg to write metadata."""
+    """Uses FFmpeg to write metadata."""
     
     # 1. Define temporary file path (Appending "2" before extension)
     path_obj = Path(file_path)
@@ -137,14 +137,14 @@ def add_tags(file_path: str, track: Track) -> Optional[Exception]:
 
 
 def ProcessAndSaveSong(song_file_path: str, song_title: str, song_artist: str, yt_id: str) -> Optional[Exception]:
-    """Corresponds to the Go ProcessAndSaveSong function (DSP, DB registration, Fingerprinting)."""
+    """End-to-end processing pipeline (DSP, DB registration, Fingerprinting)"""
     
     db_client, err = NewDBClient()
     if err:
         logger.error(f"Failed to create DB client: {err}")
         return err
     
-    with db_client: # Defer dbclient.Close()
+    with db_client: 
         # 1. Convert downloaded audio to standardized WAV (forces 44100Hz, 16-bit, Mono)
         wav_file_path, err = ConvertToWAV(song_file_path, 1)
         if err:
@@ -190,11 +190,11 @@ def ProcessAndSaveSong(song_file_path: str, song_title: str, song_artist: str, y
 
 # --- Main DL Functions ---
 
-def _dl_track_concurrent(tracks: List[Track], path: str) -> Tuple[int, Optional[Exception]]:
-    """Corresponds to the Go dlTrack function (concurrent download)."""
+def dl_track_concurrent(tracks: List[Track], path: str) -> Tuple[int, Optional[Exception]]:
+    """dlTrack function (concurrent download)."""
     
     download_count = 0
-    # Use ThreadPoolExecutor for Go-style goroutine/semaphore concurrency management
+    # Use ThreadPoolExecutor for semaphore concurrency management
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_CPUS) as executor:
         futures = []
         
