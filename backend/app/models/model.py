@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import NamedTuple   
 from dataclasses import dataclass
+
+
 class Peak:
     Time: float  
     Freq: complex 
