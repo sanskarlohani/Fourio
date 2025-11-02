@@ -5,17 +5,17 @@ import concurrent.futures
 from typing import List, Tuple, Optional
 from pathlib import Path, filepath
 
-from db.db_clients import NewDBClient
-from models.model import Track
-from .spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
-from .youtube_service import GetYoutubeId  
-from utils.utils import GetLogger, GenerateSongKey
-from .utils import SongKeyExists, YtIDExists, correctFilename, GetFileSize
-from utils.file_io import DeleteFile
-from wav.wav_converter import ConvertToWAV
-from wav.wav_io import ReadWavInfo, WavBytesToSamples
-from core.spectrogram import Spectrogram, ExtractPeaks
-from core.fingerprint import Fingerprint
+from app.db.db_clients import NewDBClient
+from app.models.model import Track
+from app.services.spotify.spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
+from app.services.spotify.youtube_service import GetYoutubeId  
+from app.utils.utils import GetLogger, GenerateSongKey
+from app.services.spotify.utils import SongKeyExists, YtIDExists, correctFilename, GetFileSize
+from app.utils.file_io import DeleteFile
+from app.services.wav.wav_converter import ConvertToWAV
+from app.services.wav.wav_io import ReadWavInfo, WavBytesToSamples
+from app.core.spectrogram import Spectrogram, ExtractPeaks
+from app.core.fingerprint import Fingerprint
 
 DELETE_SONG_FILE = False 
 NUM_CPUS = os.cpu_count() or 1 
