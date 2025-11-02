@@ -2,7 +2,7 @@ import os
 import time
 import subprocess
 import concurrent.futures 
-from typing import List, Tuple, Optional, Any
+from typing import List, Tuple, Optional
 from pathlib import Path
 
 from db.db_clients import NewDBClient
@@ -26,14 +26,14 @@ logger = GetLogger()
 def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
     """(handles ID existence check and retry)."""
     
-    # Check 1: Initial attempt to get YT ID
+    # 1: Initial attempt to get YT ID
     yt_id, err = GetYoutubeId(track_copy)
     if err:
         return None, err
     if not yt_id:
         return None, Exception("YouTube ID not found after search.")
 
-    # Check 2: Check if YouTube ID already exists in DB
+    # 2: Check if YouTube ID already exists in DB
     ytid_exists, err = YtIDExists(yt_id)
     if err:
         return None, Exception(f"error checking YT ID existence: {err}")
@@ -46,7 +46,7 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
         if err or not yt_id:
             return None, err
         
-        # Check 3: Check if the *new* YouTube ID also exists
+        # 3: Check if the *new* YouTube ID also exists
         ytid_exists, err = YtIDExists(yt_id)
         if err:
             return None, Exception(f"error checking YT ID existence (retry): {err}")
@@ -60,7 +60,7 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
 def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]:
     """
     Corresponds to the Go downloadYTaudio function. Uses yt-dlp/ffmpeg to download audio (itag 140).
-    NOTE: This uses yt-dlp as the standard Python tool, replacing the Go library.
+    NOTE: This uses yt-dlp as the standard Python tools (youtube-dl, pytube) are deprecated.
     """
     
     # 1. Path Validation (Simplified, relying on previous checks)
