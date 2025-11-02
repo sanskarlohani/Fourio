@@ -3,7 +3,7 @@ import time
 import subprocess
 import concurrent.futures 
 from typing import List, Tuple, Optional
-from pathlib import Path
+from pathlib import Path, filepath
 
 from db.db_clients import NewDBClient
 from models.model import Track
@@ -200,7 +200,7 @@ def dl_track_concurrent(tracks: List[Track], path: str) -> Tuple[int, Optional[E
         
         for t in tracks:
             # Submit each download task to the thread pool
-            future = executor.submit(_process_single_track_task, t, path)
+            future = executor.submit(process_single_track_task, t, path)
             futures.append(future)
 
         # Iterate over results as they complete
@@ -214,7 +214,7 @@ def dl_track_concurrent(tracks: List[Track], path: str) -> Tuple[int, Optional[E
     logger.info(f"Total tracks downloaded: {download_count}")
     return download_count, None
 
-def _process_single_track_task(track: Track, path: str) -> Optional[Exception]:
+def process_single_track_task(track: Track, path: str) -> Optional[Exception]:
     """Helper function to execute the logic for a single track within a thread."""
     
     # 1. Check if song already exists
@@ -227,7 +227,7 @@ def _process_single_track_task(track: Track, path: str) -> Optional[Exception]:
         return None # Success (skip)
 
     # 2. Get YouTube ID (with existence check)
-    yt_id, err = _get_yt_id(track)
+    yt_id, err = get_yt_id(track)
     if err:
         logger.error(f"'{track.Title}' by '{track.Artist}' could not be downloaded: {err}")
         return err
@@ -266,35 +266,33 @@ def _process_single_track_task(track: Track, path: str) -> Optional[Exception]:
         DeleteFile(wav_file_path)
 
     logger.info(f"'{track.Title}' by '{track.Artist}' was downloaded and registered.")
-    return None # Task completed successfully
+    return None 
 
-# --- Public API Functions ---
+
+# --- API Functions ---
 
 def DlSingleTrack(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
-    """Corresponds to the Go DlSingleTrack function."""
     logger.info(f"Getting track info for url: {url}")
     track_info, err = TrackInfo(url)
     if err: return 0, err
     
     logger.info("Now downloading track")
-    return _dl_track_concurrent([track_info], save_path)
+    return dl_track_concurrent([track_info], save_path)
 
 
 def DlPlaylist(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
-    """Corresponds to the Go DlPlaylist function."""
     tracks, err = PlaylistInfo(url)
     if err: return 0, err
 
     time.sleep(1)
     logger.info("Now downloading playlist")
-    return _dl_track_concurrent(tracks, save_path)
+    return dl_track_concurrent(tracks, save_path)
 
 
 def DlAlbum(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
-    """Corresponds to the Go DlAlbum function."""
     tracks, err = AlbumInfo(url)
     if err: return 0, err
 
     time.sleep(1)
     logger.info("Now downloading album")
-    return _dl_track_concurrent(tracks, save_path)
+    return dl_track_concurrent(tracks, save_path)
