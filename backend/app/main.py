@@ -1,22 +1,35 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
-from app.utils.utils import GetLogger
+from app.utils.file_io import CreateFolder
+from app.utils.logger_setup import GetLogger
+from app.api import router
 
-from app.api import songs, recordings, fingerprints
+logger = GetLogger()
+
+def init_directories():
+    for folder in ["tmp", os.getenv("SONGS_DIR", "songs")]:
+        try:
+            CreateFolder(folder)
+        except Exception as e:
+            logger.error(f"Failed to create directory {folder}: {e}")
+
+load_dotenv()
+init_directories()
+
 
 app = FastAPI(
   title="Fourio Backend",
   description="Backend service for audio fingerprinting and Spotify integration.",
   version="1.0.0"
 )
-logger = GetLogger()
 
-app.include_router(songs.router)
-app.include_router(recordings.router)
-app.include_router(fingerprints.router)
+app.include_router(router.routers)
+
 
 
 @app.get("/", include_in_schema=False)
-def read_root():
+def root():
     return {"message": "Backend is running. See /docs for API endpoints."}
 
 
