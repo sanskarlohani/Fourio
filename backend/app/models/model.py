@@ -29,9 +29,9 @@ class Couple(BaseModel):
 
 class RecordData(BaseModel):
     """Represents data for an audio recording."""
-    audio: str
-    duration: float
-    channels: int
+    Audio: str
+    Duration: float
+    Channels: int
     SampleRate: int
     SampleSize: int
 
