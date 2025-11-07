@@ -241,10 +241,12 @@ def save(path: str, force: bool):
         for item in os.listdir(path):
             full_path = os.path.join(path, item)
             if os.path.isfile(full_path) and full_path.endswith((".wav", ".m4a", ".mp3")):
-                if err := save_song(full_path, force):
+                err = save_song(full_path, force)
+                if err:
                     print(f"Error saving song ({full_path}): {err}")
     elif path_obj.is_file():
-        if err := save_song(path, force):
+        err = save_song(path, force)
+        if err:
             print(f"Error saving song ({path}): {err}")
     else:
         print(f"Error: Path must be a valid file or directory: {path}")
