@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Any, Optional
 
-from models.model import Couple, Song
-from utils.utils import GetEnv
-from db.mongo_client import NewMongoClient
-from db.sqlite_client import NewSQLiteClient
+from app.models.model import Couple, Song
+from app.utils.utils import GetEnv
+from .mongo_client import NewMongoClient
+from .sqlite_client import NewSQLiteClient
 
 class DBClient(ABC):
     @abstractmethod

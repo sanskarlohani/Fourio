@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from typing import NamedTuple   
 from dataclasses import dataclass
 
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple
 
 class Peak:
     Time: float  
@@ -47,3 +49,48 @@ class Track:
     Album: str
     Artists: list[str]
     Duration: int
+
+class DBClient(ABC):
+    @abstractmethod
+    def Close(self) -> Optional[Exception]:
+        pass
+
+    @abstractmethod
+    def StoreFingerprints(self, fingerprints: Dict[int, Couple]) -> Optional[Exception]:
+        pass
+
+    @abstractmethod
+    def GetCouples(self, addresses: List[int]) -> Tuple[Dict[int, List[Couple]], Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def TotalSongs(self) -> Tuple[int, Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def RegisterSong(self, songTitle: str, songArtist: str, ytID: str) -> Tuple[int, Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def GetSong(self, filterKey: str, value: Any) -> Tuple[Optional[Song], bool, Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def GetSongByID(self, songID: int) -> Tuple[Optional[Song], bool, Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def GetSongByYTID(self, ytID: str) -> Tuple[Optional[Song], bool, Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def GetSongByKey(self, key: str) -> Tuple[Optional[Song], bool, Optional[Exception]]:
+        pass
+
+    @abstractmethod
+    def DeleteSongByID(self, songID: int) -> Optional[Exception]:
+        pass
+
+    @abstractmethod
+    def DeleteCollection(self, collectionName: str) -> Optional[Exception]:
+        pass

@@ -1,5 +1,5 @@
 from typing import Dict, List
-from models.model import Couple,Peak
+from app.models.model import Couple,Peak
 
 # --- Fingerprint Address Bit Allocation ---
 # The 32-bit address (hash) is constructed by allocating specific bit ranges

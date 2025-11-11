@@ -5,9 +5,9 @@ from pymongo import MongoClient as PyMongoClient
 from pymongo import ASCENDING, errors as mongo_errors
 
 
-from db_clients import DBClient, Song
-from models.model import Couple
-from utils.utils import GenerateUniqueID, GenerateSongKey
+from app.db.db_clients import DBClient
+from app.models.model import Couple, Song
+from app.utils.utils import GenerateUniqueID, GenerateSongKey
 
 # --- Constants ---
 DATABASE_NAME = "song-recognition"

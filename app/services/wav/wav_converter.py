@@ -3,7 +3,7 @@ import subprocess
 import pathlib
 from typing import Tuple, Optional,List
 
-from utils.file_io import MoveFile 
+from app.utils.file_io import MoveFile 
 
 DEFAULT_SAMPLE_RATE = "44100"  # in Hz
 AUDIO_CODEC = "pcm_s16le"      # 16-bit Signed Little-Endian PCM (WAV Standard)

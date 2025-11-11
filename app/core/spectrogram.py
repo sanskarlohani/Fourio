@@ -3,7 +3,7 @@ import math
 from typing import List, Tuple, Optional
 from fft import FFT 
 # from fft import NumPy_FFT as FFT 
-from models.model import Peak, MaxPeakInfo
+from app.models.model import Peak, MaxPeakInfo
 
 # TODO: For high-quality filtering and resampling would use scipy.signal,
 

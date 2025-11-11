@@ -1,11 +1,11 @@
 import time
 import math
 from typing import List, Dict, Tuple, Optional
-from models.model import Match 
-from db.db_clients import NewDBClient
+from app.models.model import Match 
+from app.db.db_clients import NewDBClient
 from fingerprint import Fingerprint, TARGET_ZONE_SIZE
-from utils.utils import GenerateUniqueID
-from utils.logger_setup import GetLogger
+from app.utils.utils import GenerateUniqueID
+from app.utils.logger_setup import GetLogger
 from spectrogram import Spectrogram, ExtractPeaks
 
 

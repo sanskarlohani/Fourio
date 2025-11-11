@@ -8,9 +8,9 @@ import time
 from typing import List, Tuple, Optional, Any, NamedTuple, Dict
 from pathlib import Path
 import numpy as np
-from models.model import RecordData 
-from utils.logger_setup import GetLogger
-from utils.file_io import DeleteFile, CreateFolder
+from app.models.model import RecordData 
+from app.utils.logger_setup import GetLogger
+from app.utils.file_io import DeleteFile, CreateFolder
 from wav_converter import ReformatWAV 
 
 WAV_HEADER_SIZE = 44 # Standard size of a minimal WAV header
