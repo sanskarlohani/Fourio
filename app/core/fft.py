@@ -1,5 +1,5 @@
 import math
-from typing import List, complex
+from typing import List
 import numpy as np
 
 # Note: For better understanding of the FFT algorithm, refer to this video:

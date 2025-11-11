@@ -4,7 +4,7 @@ import subprocess
 import platform
 import pathlib
 from typing import Tuple, Optional
-from db.db_clients import NewDBClient
+from app.db.db_clients import NewDBClient
 
 
 def EncodeParam(s: str) -> str:

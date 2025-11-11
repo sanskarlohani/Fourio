@@ -2,9 +2,8 @@ from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.core.shazam import FindMatchesFGP 
-from app.db.db_clients import DBClient
-from app.models.model import Match
-from app.utils.utils import GetLogger
+from app.models.model import Match, DBClient
+from app.utils.logger_setup import GetLogger
 from app.api.songs import get_db_client
 router = APIRouter(prefix="/fourio", tags=["matching"])
 logger = GetLogger()

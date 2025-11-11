@@ -11,7 +11,7 @@ import numpy as np
 from app.models.model import RecordData 
 from app.utils.logger_setup import GetLogger
 from app.utils.file_io import DeleteFile, CreateFolder
-from wav_converter import ReformatWAV 
+from .wav_converter import ReformatWAV 
 
 WAV_HEADER_SIZE = 44 # Standard size of a minimal WAV header
 

@@ -1,9 +1,11 @@
 import json
 from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
-from app.db.db_clients import DBClient, NewDBClient
+from app.db.db_clients import NewDBClient
+from app.models.model import DBClient
 from app.services.spotify.spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
-from app.utils.utils import GetLogger, GenerateSongKey
+from app.utils.utils import GenerateSongKey
+from app.utils.logger_setup import GetLogger
 from app.services.spotify.download_manager import DlAlbum, DlPlaylist, DlSingleTrack
 
 router = APIRouter(prefix="/songs", tags=["songs"])

@@ -1,12 +1,10 @@
 from typing import Dict, List, Tuple, Any, Optional
 
-# Equivalent Python Modules
 from pymongo import MongoClient as PyMongoClient
 from pymongo import ASCENDING, errors as mongo_errors
 
 
-from app.db.db_clients import DBClient
-from app.models.model import Couple, Song
+from app.models.model import Couple, Song, DBClient
 from app.utils.utils import GenerateUniqueID, GenerateSongKey
 
 # --- Constants ---

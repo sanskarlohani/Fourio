@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError as YouTubeAPIError
 
-from models.model import Track 
-from utils.utils import GetLogger 
+from app.models.model import Track 
+from app.utils.logger_setup import GetLogger 
 
 logger = GetLogger()
 

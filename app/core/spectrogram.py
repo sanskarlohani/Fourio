@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from typing import List, Tuple, Optional
-from fft import FFT 
+from .fft import FFT 
 # from fft import NumPy_FFT as FFT 
 from app.models.model import Peak, MaxPeakInfo
 

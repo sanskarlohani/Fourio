@@ -1,8 +1,7 @@
 import sqlite3
 from typing import Dict, List, Tuple, Any, Optional
 
-from db_clients import DBClient
-from app.models.model import Couple, Song
+from app.models.model import Couple, Song, DBClient
 from app.utils.utils import GenerateUniqueID, GenerateSongKey
 
 SQLITE_FILTER_KEYS = {"id", "ytID", "key"}

@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from app.utils.file_io import CreateFolder
 from app.utils.logger_setup import GetLogger
-from app.api import router
+from app.api.router import router
 
 logger = GetLogger()
 
@@ -24,7 +24,7 @@ app = FastAPI(
   version="1.0.0"
 )
 
-app.include_router(router.routers)
+app.include_router(router)
 
 
 

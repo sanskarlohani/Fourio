@@ -3,13 +3,14 @@ import time
 import subprocess
 import concurrent.futures 
 from typing import List, Tuple, Optional
-from pathlib import Path, filepath
+from pathlib import Path
 
 from app.db.db_clients import NewDBClient
 from app.models.model import Track
 from app.services.spotify.spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
 from app.services.spotify.youtube_service import GetYoutubeId  
-from app.utils.utils import GetLogger, GenerateSongKey
+from app.utils.utils import GenerateSongKey
+from app.utils.logger_setup import GetLogger
 from app.services.spotify.utils import SongKeyExists, YtIDExists, correctFilename, GetFileSize
 from app.utils.file_io import DeleteFile
 from app.services.wav.wav_converter import ConvertToWAV
@@ -236,7 +237,7 @@ def process_single_track_task(track: Track, path: str) -> Optional[Exception]:
     track_title, track_artist = correctFilename(track.Title, track.Artist)
     file_name = f"{track_title} - {track_artist}"
     # Start with m4a download path
-    file_path = filepath.join(path, file_name + ".m4a")
+    file_path = Path(path) / f"{file_name}.m4a"
 
     # 4. Download Audio
     err = download_yt_audio(yt_id, path, file_path)
@@ -256,7 +257,7 @@ def process_single_track_task(track: Track, path: str) -> Optional[Exception]:
     DeleteFile(file_path) 
 
     # 7. Add Metadata Tags (Assumes tags are applied to the processed WAV file)
-    wav_file_path = filepath.join(path, file_name + ".wav")
+    wav_file_path = Path(path) / f"{file_name}.wav"
     if err := add_tags(wav_file_path, track):
         logger.error(f"Error adding tags to {wav_file_path}: {err}")
         return err

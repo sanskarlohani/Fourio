@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict
 from fastapi import APIRouter, HTTPException
 from app.models.model import RecordData
-from app.utils.utils import GetLogger
+from app.utils.logger_setup import GetLogger
 from app.utils.file_io import CreateFolder
 from app.services.wav.wav_io import WriteWavFile
 import base64
