@@ -10,6 +10,7 @@ from googleapiclient.errors import HttpError as YouTubeAPIError
 
 from app.models.model import Track 
 from app.utils.logger_setup import GetLogger 
+from app.utils.utils import GetEnv
 
 logger = GetLogger()
 
@@ -26,7 +27,7 @@ class SearchResult:
     Extra: List[str] = field(default_factory=list) # additional info like views, likes, etc.
 
 
-DEVELOPER_KEY = "" 
+DEVELOPER_KEY = GetEnv("YOUTUBE_API_KEY", "") 
 DURATION_MATCH_THRESHOLD = 5 # Seconds tolerance for matching duration
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
