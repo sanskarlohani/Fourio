@@ -9,9 +9,8 @@ from app.utils.file_io import CreateFolder
 
 # --- Configuration ---
 app = typer.Typer(
-    name="Fourio",
-    help="Shazam-style audio fingerprinting and music management CLI.",
-    rich_markup_errors=True
+  name="Fourio",
+  help="Shazam-style audio fingerprinting and music management CLI.", 
 )
 logger = GetLogger()
 SONGS_DIR = "songs" 

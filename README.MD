@@ -132,7 +132,7 @@ pip install -r requirements.txt
 Create a `.env` file inside folder.
 
 Use the structure defined in the sample file:  
-👉 **See `.env.example`** ([link](https://github.com/RudraNarayan94/Fourio/.env.example))
+👉 **See `.env.example`** ([link](https://github.com/RudraNarayan94/Fourio/blob/main/.env.example))
 
 The `.env` file should include keys for:
 - Spotify API access  
@@ -156,8 +156,9 @@ These credentials allow Fourio to access track metadata, album details, and play
 
 
 
-🧠 Usage
+## 🧠 Usage
 Run CLI
+
 uv run python cli.py --help
 
 🎧 Commands
@@ -257,4 +258,4 @@ WebAssembly (WASM) experimentation for client-side matching
 
 📜 License
 
-This project is licensed under the [**MIT License**](https://github.com/RudraNarayan94/Fourio/blob/main/LICENSE).
+This project is licensed under the [**MIT License**](https://github.com/RudraNarayan94/Fourio/blob/main/LICENCE).
