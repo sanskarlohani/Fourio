@@ -2,41 +2,39 @@ banner
 
 video link
 
-Description
-Fourio is a command-line implementation of a music recognition system inspired by Shazam.
-It analyzes song fingerprints, detects matches from local or downloaded tracks, and integrates with Spotify and YouTube for metadata and previews.
+## Description
 
-This version is fully written in Python, powered by:
+**Fourio** is a command-line implementation of a music recognition system inspired by **Shazam**.The name Fourio is a portmanteau of **"Fourier"** and **"Audio"** named after the [**Fourier Transform**](https://en.wikipedia.org/wiki/Fourier_transform).It analyzes song fingerprints, detects matches from local or downloaded tracks, and integrates with Spotify and YouTube for metadata and previews.  
 
-⚡ FastAPI (backend API)
+This version of **Fourio** is fully written in **Python**, powered by:
+- ⚡ **FastAPI** — backend API framework for high-performance web services  
+- 🧠 **Typer** — command-line interface (CLI) for intuitive developer experience  
+- 🧩 **uv** — ultra-fast dependency manager and environment tool  
+- 🎵 **ffmpeg** — audio conversion and processing utility  
+- ☁️ **Spotify API** — metadata integration for tracks, albums, and playlists
+- 🎞️ **YouTube API** — for fetching song previews and additional metadata
 
-🧠 Typer (CLI)
+## Project Struture
+  ```bash
+  fourio/
+  ├── app/
+  │   ├── api/             # Web API endpoints
+  │   ├── utils/           # Logging, file handling, general utilities
+  │   ├── db/              # Database connection and operations
+  │   ├── models/          # Data models
+  │   ├── services/        # Different services like Spotify, YouTube and WAV conversion
+  │   ├── core/            # Core fingerprinting, Spectrogram and matching logic
+  │   └── main.py          # FastAPI entry point
+  |── .env                 # Environment variables
+  ├── pyproject.toml       # uv dependencies
+  ├── requirements.txt     # Python dependencies  (Optional)
+  ├── cli_logic.py         # CLI logic        
+  ├── cli.py               # Typer CLI entry point
+  ├── .gitignore
+  ├── README.md
+  └── LICENSE
+  ```
 
-🧩 uv (ultra-fast dependency manager)
-
-🎵 ffmpeg (audio conversion)
-
-☁️ Spotify API (metadata integration)
-
-Project Struture
-fourio/
-├── app/
-│   ├── api/             # FastAPI endpoints
-│   ├── utils/           # Logging, file handling, fingerprint logic
-│   ├── db/           # Logging, file handling, fingerprint logic
-│   ├── models/           # Logging, file handling, fingerprint logic
-│   ├── services/           # Logging, file handling, fingerprint logic
-│   ├── core/           # Logging, file handling, fingerprint logic
-│   └── main.py              # FastAPI entry point
-|── .env
-├── pyproject.toml       # uv dependencies
-├── cli_logic.py                 
-├── cli.py               # Typer CLI entry point
-├── .gitignore
-├── README.md
-└── LICENSE
-
-## Installation :desktop_computer:
 ### Prerequisites
 Python 3.10+
 
@@ -44,37 +42,117 @@ FFmpeg (verify via ffmpeg -version)
 
 uv — install guide
 
+## Installation
 
-### Steps
+### ✔ Prerequisites
 
+#### 🔹 Python 3.10+  
+- [Download Python](https://www.python.org/downloads/)
+
+
+#### 🔹 FFmpeg (required for audio decoding)  
+
+  **Install FFmpeg:**
+
+  - **Windows (Chocolatey — Recommended)**  
+    ```bash
+    choco install ffmpeg
+    ```
+
+      [Chocolatey install guide](https://chocolatey.org/install)
+
+  - **macOS (Homebrew)**
+    ```bash
+      brew install ffmpeg
+    ```
+  - **Linux (Ubuntu/Debian)**
+    ```bash
+      sudo apt update
+      sudo apt install ffmpeg
+    ```
+
+
+  - [**Official FFmpeg download page**](https://ffmpeg.org/download.html)
+
+  **Verify installation:**
+  ```bash
+    ffmpeg -version
+  ```
+
+🔹 uv — ultra-fast Python environment & dependency manager
+
+Install guide:
+https://github.com/astral-sh/uv
+
+---
+### 🚀 Steps
+
+
+
+#### **1. Clone the repository and create a virtual environment using uv**
+
+```bash
 # Clone the repo
-git clone https://github.com/yourname/fourio.git
-cd fourio/backend
+git clone https://github.com/RudraNarayan94/Fourio.git
+cd fourio
 
 # Create virtual environment (using uv)
 uv venv
 
 # Activate it
-uv run bash  # or PowerShell: uv run powershell
+uv run bash          # On PowerShell → uv run powershell
 
 # Install dependencies
 uv sync
+```
+
+#### **2. (Optional) Setup using Python venv + requirements.txt**
+```bash
+  # Clone the repo
+git clone https://github.com/RudraNarayan94/Fourio.git
+cd fourio
+
+# Create virtual environment (using venv)
+python -m venv venv
+
+# Activate it
+source venv/bin/activate     # macOS/Linux
+# On Windows:
+# venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+---
 
 
+### 🎵 Environment Setup
 
-🎵 Environment Setup
+Create a `.env` file inside folder.
 
-Create a .env file in your backend folder:
+Use the structure defined in the sample file:  
+👉 **See `.env.example`** ([link](https://github.com/RudraNarayan94/Fourio/.env.example))
 
+The `.env` file should include keys for:
+- Spotify API access  
+- Database configuration  
+- Backend settings  
+- YouTube API key (optional)
+
+You can generate **Spotify credentials** by creating an app at the  
+👉 Spotify Developer Dashboard:  
+https://developer.spotify.com/dashboard/
+
+Once created, copy your:
+```bash
 SPOTIFY_CLIENT_ID=your-client-id
 SPOTIFY_CLIENT_SECRET=your-client-secret
-SONGS_DIR=songs
-TMP_DIR=tmp
+```
 
+These credentials allow Fourio to access track metadata, album details, and playlist information.
 
-You can generate Spotify credentials from the Spotify Developer Dashboard
-
-
+---
 
 
 
@@ -179,4 +257,4 @@ WebAssembly (WASM) experimentation for client-side matching
 
 📜 License
 
-This project is licensed under the MIT License.
+This project is licensed under the [**MIT License**](https://github.com/RudraNarayan94/Fourio/blob/main/LICENSE).
