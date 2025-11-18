@@ -158,104 +158,96 @@ These credentials allow Fourio to access track metadata, album details, and play
 
 ## 🧠 Usage
 Run CLI
-
+```bash
 uv run python cli.py --help
+```
+![alt text](image.png)
+## 🎧 Commands
+| Command                           | Description                                               |
+| --------------------------------- | --------------------------------------------------------- |
+| `find <path_to_wav>`              | Analyze a WAV file and find matching fingerprints         |
+| `download <spotify_url>`          | Download and process a song/album/playlist from Spotify   |
+| `save <path_or_dir> [--force/-f]` | Fingerprint and save local songs                          |
+| `erase`                           | Clear all stored songs and fingerprints from the database |
+| `serve --proto http --port 8000`  | Start the FastAPI backend server                          |
 
-🎧 Commands
-Command	Description
-find <path_to_wav>	Find matching song fingerprints
-download <spotify_url>	Download and process a Spotify song
-save <path_or_dir> [--force/-f]	Save and fingerprint local songs
-erase	Clear all stored songs and fingerprints
-serve --proto http --port 8000	Start FastAPI backend
-💡 Examples
-▶ Download a Spotify track
+### 💡 Examples
+#### ▶ Download a Spotify track
+```bash
 uv run python cli.py download https://open.spotify.com/track/4pqwGuGu34g8KtfN8LDGZm
+```
 
-🔎 Find a song match
+#### 🔎 Find a song match
+```bash
 uv run python cli.py find songs/Voila.wav
+```
 
-💾 Save local songs
+#### 💾 Save local songs
+```bash
 uv run python cli.py save ./local_songs/ --force
+```
 
-🧹 Erase all data
+#### 🧹 Erase all data
+```bash
 uv run python cli.py erase
+```
 
-🚀 Serve backend
+<!-- #### 🚀 Serve backend
+```bash
 uv run python cli.py serve --proto http --port 8000
+``` -->
 
 
 
+## 📚 Resources 
+- [SeekTune - Go implementation of Shazam](https://github.com/cgzirim/seek-tune.git)(main resource)
+- [How does Shazam work - Coding Geek](https://drive.google.com/file/d/1ahyCTXBAZiuni6RTzHzLoOwwfTRFaU-C/view) (main resource)
+- [Song recognition using audio fingerprinting](https://hajim.rochester.edu/ece/sites/zduan/teaching/ece472/projects/2019/AudioFingerprinting.pdf)
+- [How does Shazam work - Toptal](https://www.toptal.com/algorithms/shazam-it-music-processing-fingerprinting-and-recognition)
+- [Creating Shazam in Java](https://www.royvanrijn.com/blog/2010/06/creating-shazam-in-java/) 
 
-📚 Resources
+---
 
-How does Shazam work - Toptal
+## 🧑‍💻 Author
 
-Song recognition using audio fingerprinting (U. Rochester)
-
-Creating Shazam in Java - Roy van Rijn
-
-
-
-
-🧑‍💻 Author
-
-Rudra Narayan
-🎵 Building Fourio – a calm, minimal take on music recognition.
-GitHub
- • LinkedIn
+### Rudra Narayan 
+ - Connect with me on [LinkedIn](https://www.linkedin.com/in/rudra404/).
+  - Check out my other [GitHub](https://github.com/RudraNarayan94) projects.
 
 
 
-🚀 Future Roadmap
+## 🚀 Future Roadmap
 
-Fourio is evolving from a CLI tool into a full-stack, Shazam-inspired audio recognition system. Here’s what’s ahead:
+Fourio will gradually evolve into a full-stack, Shazam-style system with a modern UI and scalable backend. Feel free to contribute or suggest features!
 
-🎧 Frontend (React + Web Audio)
+### 🎧 Frontend (React)
+- Microphone recording & PCM extraction  
+- Client-side fingerprint generation  
+- Simple waveform visualization  
 
-Capture live microphone input
+### ⚙️ Backend (FastAPI)
+- `/find` → match fingerprints  
+- `/download` → index Spotify tracks  
+- `/songs` → list stored entries  
+- Faster async matching & caching  
 
-Convert audio to PCM samples and generate fingerprints client-side
+### 🧠 Fingerprinting Engine
+- Cleaner service-layer architecture  
+- Tunable fingerprint density & thresholds  
+- Incremental database indexing  
 
-Visualize waveform and match confidence in real time
+### ☁️ Deployment
+- Docker setup  
+- Optional FFmpeg/GPU acceleration  
+- Remote MongoDB sync  
 
-⚙️ Backend (FastAPI)
-
-Implement REST endpoints:
-
-POST /find → Match uploaded fingerprints
-
-POST /download → Fetch and index tracks from external sources
-
-GET /songs → Retrieve indexed database entries
-
-Add async fingerprint matching engine and optimized caching
-
-🧠 Fingerprint Engine
-
-Migrate core hashing and matching logic into a reusable service layer
-
-Add configurable fingerprint density, threshold tuning, and duplicate detection
-
-Enable incremental indexing and background updates
-
-☁️ DevOps & Deployment
-
-Containerize the entire system with Docker
-
-Provide optional GPU/FFmpeg accelerated pipeline
-
-Auto-sync fingerprints and metadata to a remote MongoDB instance
-
-🧩 Long-Term
-
-Browser-based “Music Finder” mode
-
-User library for saved recordings and results
-
-WebAssembly (WASM) experimentation for client-side matching
+### 🧩 Long-Term Ideas
+- Browser “Music Finder” mode  
+- User library for recordings  
+- WebAssembly experiments for client-side matching  
 
 
-📜 License
+---
+## 📜 License
 
 This project is licensed under the [**MIT License**](https://github.com/RudraNarayan94/Fourio/blob/main/LICENCE).
