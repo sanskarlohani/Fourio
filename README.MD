@@ -4,7 +4,8 @@
   <!-- <a href="https://drive.google.com/file/d/1t2RdF4a-nRbqmLAzZ4dTgXcXU4G1T3RZ/view?usp=drive_link" target="_blank"> -->
     <img src="static/fourioc.png"
          alt="Fourio Preview"
-         width="830">
+         width="830"
+         height="230">
   </a>
 </p>
 
@@ -169,7 +170,7 @@ Run CLI
 ```bash
 uv run python cli.py --help
 ```
-![alt text](image.png)
+![alt text](static/image.png)
 ## 🎧 Commands
 | Command                           | Description                                               |
 | --------------------------------- | --------------------------------------------------------- |
