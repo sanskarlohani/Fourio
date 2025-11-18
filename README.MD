@@ -5,7 +5,7 @@
     <img src="static/fourioc.png"
          alt="Fourio Preview"
          width="830"
-         height="230">
+         height="300">
   </a>
 </p>
 
