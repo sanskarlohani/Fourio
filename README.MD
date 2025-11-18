@@ -2,7 +2,7 @@
 
 <p align="center">
   <!-- <a href="https://drive.google.com/file/d/1t2RdF4a-nRbqmLAzZ4dTgXcXU4G1T3RZ/view?usp=drive_link" target="_blank"> -->
-    <img src="static/fourioc.png"
+    <img src="static/fourio.png"
          alt="Fourio Preview"
          width="830"
          height="300">
