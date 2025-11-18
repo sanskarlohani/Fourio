@@ -1,6 +1,20 @@
-banner
+<h1 align="center">Fourio 🎵</h1>
 
-video link
+<p align="center">
+  <!-- <a href="https://drive.google.com/file/d/1t2RdF4a-nRbqmLAzZ4dTgXcXU4G1T3RZ/view?usp=drive_link" target="_blank"> -->
+    <img src="static/fourioc.png"
+         alt="Fourio Preview"
+         width="830">
+  </a>
+</p>
+
+
+<!-- <p align="center">
+  <a href="YOUR_VIDEO_LINK_HERE" target="_blank">
+    ▶ Watch Demo Video
+  </a>
+</p> -->
+
 
 ## Description
 
@@ -34,13 +48,7 @@ This version of **Fourio** is fully written in **Python**, powered by:
   ├── README.md
   └── LICENSE
   ```
-
-### Prerequisites
-Python 3.10+
-
-FFmpeg (verify via ffmpeg -version)
-
-uv — install guide
+---
 
 ## Installation
 
