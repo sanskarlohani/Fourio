@@ -17,8 +17,8 @@ HOP_SIZE = FREQ_BIN_SIZE // 32 # 1024 / 32 = 32
 
 def LowPassFilter(cutoff_frequency: float, sample_rate: float, input_data: List[float]) -> List[float]:
     """
-    LowPassFilter is a first-order low-pass filter that attenuates high
-    frequencies above the cutoffFrequency.
+    It attenuates high frequencies while allowing low frequencies to pass through, 
+    acting as a smoother or integrator for signals
     It uses the transfer function H(s) = 1 / (1 + sRC), where RC is the time constant.
     """
     rc = 1.0 / (2 * math.pi * cutoff_frequency)
@@ -46,7 +46,7 @@ def Downsample(input_data: List[float], original_sample_rate: int, target_sample
     Since we've filtered out everything above 5kHz, 
     a sample rate of around 10-12kHz is sufficient.
 
-    This help speed up the FFT and reduce the memory usage.
+    help speed up the FFT and reduce the memory usage.
     """
     if target_sample_rate <= 0 or original_sample_rate <= 0:
         return None, Exception("sample rates must be positive")
