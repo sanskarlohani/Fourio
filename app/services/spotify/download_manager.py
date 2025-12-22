@@ -18,7 +18,7 @@ from app.services.wav.wav_io import ReadWavInfo, WavBytesToSamples
 from app.core.spectrogram import Spectrogram, ExtractPeaks
 from app.core.fingerprint import Fingerprint
 
-DELETE_SONG_FILE = False 
+DELETE_SONG_FILE = True 
 NUM_CPUS = os.cpu_count() or 1 
 
 logger = GetLogger()
@@ -60,7 +60,6 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
 
 def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]:
     """
-    Corresponds to the Go downloadYTaudio function. Uses yt-dlp/ffmpeg to download audio (itag 140).
     NOTE: This uses yt-dlp as the standard Python tools (youtube-dl, pytube) are deprecated.
     """
     
@@ -147,41 +146,50 @@ def ProcessAndSaveSong(song_file_path: str, song_title: str, song_artist: str, y
     
     with db_client: 
         # 1. Convert downloaded audio to standardized WAV (forces 44100Hz, 16-bit, Mono)
+        print("Entering ConvertToWAV")
         wav_file_path, err = ConvertToWAV(song_file_path, 1)
         if err:
             logger.error(f"Failed to convert to WAV: {err}")
             return err
 
         # 2. Read WAV info and extract float samples
+        print("Entering ReadWavInfo")
         wav_info, err = ReadWavInfo(wav_file_path)
         if err:
             logger.error(f"Failed to read WAV info: {err}")
             return err
         
+        print("Entering WavBytesToSamples")
         samples, err = WavBytesToSamples(wav_info.Data)
         if err:
             logger.error(f"Error converting WAV bytes to samples: {err}")
             return err
         
+        print("Number of samples: ", len(samples))
         # 3. DSP Pipeline (Spectrogram, Peaks, Fingerprints)
+        print("Entering Spectrogram")
         spectro, err = Spectrogram(samples, wav_info.SampleRate)
         if err:
             logger.error(f"Error creating spectrogram: {err}")
             return err
         
         # 4. DB Registration
+        print("Entering RegisterSong")
         song_id, err = db_client.RegisterSong(song_title, song_artist, yt_id)
         if err:
             logger.error(f"Failed to register song: {err}")
             return err
 
+        print("Entering ExtractPeaks & Fingerprint")
         peaks = ExtractPeaks(spectro, wav_info.Duration)
         fingerprints = Fingerprint(peaks, song_id)
 
         # 5. Store Fingerprints
+        print(f"Storing fingerprints for {song_title} by {song_artist}...")
         err = db_client.StoreFingerprints(fingerprints)
         if err:
             # Crucial: Delete song if fingerprint storage fails
+            # print("Storing fingerprints for {song_title} by {song_artist} ")
             db_client.DeleteSongByID(song_id)
             logger.error(f"Failed to store fingerprints: {err}")
             return Exception(f"error storing fingerprint: {err}")
@@ -196,7 +204,7 @@ def dl_track_concurrent(tracks: List[Track], path: str) -> Tuple[int, Optional[E
     
     download_count = 0
     # Use ThreadPoolExecutor for semaphore concurrency management
-    with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_CPUS) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=NUM_CPUS) as executor:
         futures = []
         
         for t in tracks:
@@ -258,10 +266,11 @@ def process_single_track_task(track: Track, path: str) -> Optional[Exception]:
 
     # 7. Add Metadata Tags (Assumes tags are applied to the processed WAV file)
     wav_file_path = Path(path) / f"{file_name}.wav"
-    if err := add_tags(wav_file_path, track):
+    err = add_tags(wav_file_path, track)
+    if err:
         logger.error(f"Error adding tags to {wav_file_path}: {err}")
         return err
-
+    
     # 8. Final Cleanup (if DELETE_SONG_FILE is true)
     if DELETE_SONG_FILE:
         DeleteFile(wav_file_path)

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 
+@dataclass
 class Peak:
     Time: float  
     Freq: complex 

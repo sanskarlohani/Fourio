@@ -1,8 +1,8 @@
 import numpy as np
 import math
 from typing import List, Tuple, Optional
-from .fft import FFT 
-# from fft import NumPy_FFT as FFT 
+# from .fft import FFT 
+from .fft import NumPy_FFT as FFT 
 from app.models.model import Peak, MaxPeakInfo
 
 # TODO: For high-quality filtering and resampling would use scipy.signal,
@@ -74,13 +74,14 @@ def Downsample(input_data: List[float], original_sample_rate: int, target_sample
     return resampled, None
 
 def Spectrogram(sample: List[float], sample_rate: int) -> Tuple[List[List[complex]], Optional[Exception]]:
-   
+    print(f"[Spectrogram DEBUG] Starting DSP pipeline. Input size: {len(sample)} samples.")
     filtered_sample = LowPassFilter(MAX_FREQ, float(sample_rate), sample)
-
+    print(f"[Spectrogram DEBUG] Low-pass filter applied. Output size: {len(filtered_sample)} samples.")
     # here we downsample the audio (44100 -> 11025)
     target_sample_rate = sample_rate // DSP_RATIO
+    print(f"[Spectrogram DEBUG] Target sample rate: {target_sample_rate}")
     downsampled_sample, err = Downsample(filtered_sample, sample_rate, target_sample_rate)
-    
+    print(f"[Spectrogram DEBUG] Downsampled audio. Output size: {len(downsampled_sample)} samples.")
     if err:
         return None, Exception(f"couldn't downsample audio sample: {err}")
     if not downsampled_sample:
@@ -92,13 +93,15 @@ def Spectrogram(sample: List[float], sample_rate: int) -> Tuple[List[List[comple
     if window_shift <= 0: return None, Exception("Invalid hop size calculation")
     
     total_samples = len(downsampled_np)
+    print(f"[Spectrogram DEBUG] Total samples after downsampling: {total_samples}")
     if total_samples < FREQ_BIN_SIZE: return [], None
 
     # num_windows based on the overlap (length - window_size) / hop_size + 1
     num_windows = (total_samples - FREQ_BIN_SIZE) // HOP_SIZE + 1
     
     spectrogram: List[List[complex]] = [[]] * num_windows
-
+    print(f"[Spectrogram DEBUG] Calculated {num_windows} windows for STFT.")
+    print(f"[Spectrogram DEBUG] Starting heavy FFT loop...")
   
     # a general Hanning/Hamming-like window (specifically, the 0.54/0.46 is Hamming).
     window_indices = np.arange(FREQ_BIN_SIZE)

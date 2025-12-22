@@ -14,10 +14,16 @@ MONGODB_FILTER_KEYS = {"_id", "ytID", "key"}
     
 # --- client class ---
 class MongoClient(DBClient):
-    def __init__(self, uri: str, client: PyMongoClient):
+    def __init__(self, client: PyMongoClient):
       self._client = client
       self._db = self._client[DATABASE_NAME]
-        
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.Close()
+
     @staticmethod
     def _map_song_key(key: str) -> Tuple[str, str]:
       """split 'title---artist' key back to title and artist."""
@@ -172,6 +178,6 @@ def NewMongoClient(uri: str) -> Tuple[Optional[MongoClient], Optional[Exception]
     try:
         client = PyMongoClient(uri)
         client.admin.command('ping')
-        return MongoClient(uri, client), None
+        return MongoClient(client), None
     except Exception as e:
         return None, Exception(f"error connecting to MongoDB: {e}")

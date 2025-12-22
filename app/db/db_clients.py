@@ -5,10 +5,12 @@ from .mongo_client import NewMongoClient
 from .sqlite_client import NewSQLiteClient
 
 
-DBtype = GetEnv("DB_TYPE", "sqlite")
+# DBtype = GetEnv("DB_TYPE", "sqlite")
 
 def NewDBClient() -> Tuple[Optional[DBClient], Optional[Exception]]:
-    
+    DBtype = GetEnv("DB_TYPE", "sqlite")  # evaluate dynamically each call
+    print("DB_TYPE =", DBtype)
+
     if DBtype == "mongo":
         dbUsername = GetEnv("DB_USER")
         dbPassword = GetEnv("DB_PASS")
@@ -17,7 +19,7 @@ def NewDBClient() -> Tuple[Optional[DBClient], Optional[Exception]]:
         dbPort     = GetEnv("DB_PORT")
 
         if dbUsername and dbPassword:
-            dbUri = f"mongodb://{dbUsername}:{dbPassword}@{dbHost}:{dbPort}/{dbName}"
+            dbUri = f"mongodb://{dbUsername}:{dbPassword}@{dbHost}:{dbPort}/{dbName}?authSource=admin"
         else:
             dbUri = "mongodb://localhost:27017" # default 
 
