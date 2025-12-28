@@ -37,23 +37,26 @@ class MongoClient(DBClient):
 
     def StoreFingerprints(self, fingerprints: Dict[int, Couple]) -> Optional[Exception]:
       fingerprint_collection = self._db["fingerprints"]
-      
+      import time
+      start_time = time.perf_counter()
       try:
           for address, couple in fingerprints.items():
-              filter_query = {"_id": address}
-              update_query = {
-                  "$push": {
-                      "couples": {
-                          "AnchorTimeMs": couple.AnchorTimeMs,
-                          "SongID": couple.SongID,
-                      }
-                  }
-              }
-              fingerprint_collection.update_one(
-                  filter_query, 
-                  update_query, 
-                  upsert=True
-              )
+            filter_query = {"_id": address}
+            update_query = {
+                "$push": {
+                    "couples": {
+                        "AnchorTimeMs": couple.AnchorTimeMs,
+                        "SongID": couple.SongID,
+                    }
+                }
+            }
+            fingerprint_collection.update_one(
+                filter_query, 
+                update_query, 
+                upsert=True
+            )
+          end_time = time.perf_counter()
+          print(f"Time taken for storing fingerprints: {end_time - start_time}")
           return None
       except Exception as e:
           return Exception(f"error upserting document: {e}")

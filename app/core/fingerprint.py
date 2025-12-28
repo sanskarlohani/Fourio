@@ -1,6 +1,6 @@
 from typing import Dict, List
 from app.models.model import Couple,Peak
-
+import time
 # --- Fingerprint Address Bit Allocation ---
 # The 32-bit address (hash) is constructed by allocating specific bit ranges
 # to the frequency of the anchor peak, the frequency of the target peak, 
@@ -28,7 +28,6 @@ def create_address(anchor: Peak, target: Peak) -> int:
     target_freq = int(target.Freq.real)
     # convert to milliseconds
     delta_ms = int((target.Time - anchor.Time) * 1000)
-
     
     address = (anchor_freq << ANCHOR_FREQ_SHIFT) | (target_freq << TARGET_FREQ_SHIFT) | delta_ms
     return address
@@ -38,6 +37,7 @@ def Fingerprint(peaks: List[Peak], songID: int) -> Dict[int, Couple]:
     """
     generates fingerprints from peaks using the 'target zone' method.
     """
+    start_time = time.perf_counter()
     fingerprints: Dict[int, Couple] = {}
 
     for i, anchor in enumerate(peaks):
@@ -53,5 +53,6 @@ def Fingerprint(peaks: List[Peak], songID: int) -> Dict[int, Couple]:
                 AnchorTimeMs=anchor_time_ms, 
                 SongID=songID
             )
-            
+    end_time = time.perf_counter()
+    print(f"Time taken for fingerprinting: {end_time - start_time}")       
     return fingerprints

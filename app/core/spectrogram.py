@@ -4,7 +4,7 @@ from typing import List, Tuple, Optional
 # from .fft import FFT 
 from .fft import NumPy_FFT as FFT 
 from app.models.model import Peak, MaxPeakInfo
-
+import time
 # TODO: For high-quality filtering and resampling would use scipy.signal,
 
 
@@ -98,23 +98,37 @@ def Spectrogram(sample: List[float], sample_rate: int) -> Tuple[List[List[comple
 
     # num_windows based on the overlap (length - window_size) / hop_size + 1
     num_windows = (total_samples - FREQ_BIN_SIZE) // HOP_SIZE + 1
-    
-    spectrogram: List[List[complex]] = [[]] * num_windows
     print(f"[Spectrogram DEBUG] Calculated {num_windows} windows for STFT.")
-    print(f"[Spectrogram DEBUG] Starting heavy FFT loop...")
-  
+
     # a general Hanning/Hamming-like window (specifically, the 0.54/0.46 is Hamming).
     window_indices = np.arange(FREQ_BIN_SIZE)
     window_func = 0.54 - 0.46 * np.cos(2 * math.pi * window_indices / (FREQ_BIN_SIZE - 1))
+    
+    spectrogram = np.zeros((num_windows, FREQ_BIN_SIZE), dtype=np.complex64)
+    print(f"[Spectrogram DEBUG] Starting heavy FFT loop...")
+    # start_time = time.perf_counter()
+
 
     # STFT (Short-Time Fourier Transform)
     for i in range(num_windows):
+        # Print progress every 20,000 windows so you know it hasn't crashed
+        # if i % 20000 == 0 and i > 0:
+        #     elapsed = time.perf_counter() - start_time
+        #     print(f"   Progress: {i}/{num_windows} windows processed... ({elapsed:.2f}s elapsed)")
         start = i * HOP_SIZE
         end = start + FREQ_BIN_SIZE
         
         bin_data = downsampled_np[start:end]
         windowed_bin = bin_data * window_func
-        spectrogram[i] = FFT(windowed_bin.tolist())
+        spectrogram[i] = FFT(windowed_bin)
+    
+    print(f"[Spectrogram DEBUG] FFT Loop Completed!")
+    # Record the end time
+
+    # end_total = time.perf_counter()
+    # duration = end_total - start_time
+    # print(f"Total Time: {duration:.4f} seconds")
+    # print(f"Average Time per Window: {(duration/num_windows)*1000:.4f} ms")
         
     return spectrogram, None
 
@@ -126,13 +140,15 @@ BANDS = [
     (0, 10), (10, 20), (20, 40), (40, 80), 
     (80, 160), (160, 512)
 ]
-def ExtractPeaks(spectrogram: List[List[complex]], audio_duration: float) -> List[Peak]:
+def ExtractPeaks(spectrogram: np.ndarray, audio_duration: float) -> List[Peak]:
     """
     this specific method of peak extraction is called 
     "Max-Magnitude Per Frequency Band" extraction
     """
     if len(spectrogram) < 1:
         return []
+    print(f"[ExtractPeaks DEBUG] Starting peak extraction for {spectrogram.shape[0]} windows...")
+    start_time = time.perf_counter()
 
     peaks: List[Peak] = []
     bin_duration = audio_duration / float(len(spectrogram))
@@ -176,9 +192,11 @@ def ExtractPeaks(spectrogram: List[List[complex]], audio_duration: float) -> Lis
                 peak_time_in_bin = float(info.freq_idx) * bin_duration / float(len(bin_data))
 
                 # Calculate the absolute time of the peak
-                # Go: peakTime := float64(binIdx)*binDuration + peakTimeInBin
                 peak_time = float(bin_idx) * bin_duration + peak_time_in_bin
 
                 peaks.append(Peak(Time=peak_time, Freq=info.max_freq))
 
+    execution_time = time.perf_counter() - start_time
+    print(f"[ExtractPeaks DEBUG] Completed in {execution_time:.4f} seconds.")
+    print(f"[ExtractPeaks DEBUG] Found {len(peaks)} peaks total.")
     return peaks

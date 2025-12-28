@@ -41,6 +41,6 @@ def FFT(input_data: List[float]) -> List[complex]:
     
     return _recursive_fft(complex_array)
 
-def NumPy_FFT(input_data: List[float]) -> List[complex]:
+def NumPy_FFT(input_data: np.ndarray) -> np.ndarray:
     np_result = np.fft.fft(input_data)
-    return np_result.tolist()
+    return np_result
