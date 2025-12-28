@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Tuple, Optional
 
 def DeleteFile(file_path: str) -> Optional[Exception]:
-    print(f"Deleting file: {file_path}")
+    # print(f"Deleting file: {file_path}")
     try:
         if os.path.exists(file_path):
             if os.path.isdir(file_path):

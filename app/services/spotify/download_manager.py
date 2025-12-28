@@ -18,7 +18,7 @@ from app.services.wav.wav_io import ReadWavInfo, WavBytesToSamples
 from app.core.spectrogram import Spectrogram, ExtractPeaks
 from app.core.fingerprint import Fingerprint
 
-DELETE_SONG_FILE = True 
+DELETE_SONG_FILE = False 
 NUM_CPUS = os.cpu_count() or 1 
 
 logger = GetLogger()

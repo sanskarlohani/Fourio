@@ -133,13 +133,12 @@ def Spectrogram(sample: List[float], sample_rate: int) -> Tuple[List[List[comple
     return spectrogram, None
 
 
-
-
-#frequency bin ranges for peak extraction
+# frequency bin ranges for peak extraction
 BANDS = [
     (0, 10), (10, 20), (20, 40), (40, 80), 
     (80, 160), (160, 512)
 ]
+
 def ExtractPeaks(spectrogram: np.ndarray, audio_duration: float) -> List[Peak]:
     """
     this specific method of peak extraction is called 
@@ -149,53 +148,39 @@ def ExtractPeaks(spectrogram: np.ndarray, audio_duration: float) -> List[Peak]:
         return []
     print(f"[ExtractPeaks DEBUG] Starting peak extraction for {spectrogram.shape[0]} windows...")
     start_time = time.perf_counter()
-
     peaks: List[Peak] = []
     bin_duration = audio_duration / float(len(spectrogram))
-
+    
     for bin_idx, bin_data in enumerate(spectrogram):
         bin_band_maxies: List[MaxPeakInfo] = []
         
         for band_min, band_max in BANDS:
-            max_mag = 0.0
-            max_info = MaxPeakInfo(0.0, complex(0,0), 0)
-          
             band_slice = bin_data[band_min:band_max]
             
-            for idx, freq in enumerate(band_slice):
-                magnitude = abs(freq)
+            #single scan with argmax, then direct indexing
+            magnitudes = np.abs(band_slice)
+            max_idx = np.argmax(magnitudes)
+            max_mag = magnitudes[max_idx]  
+            
+            if max_mag > 0.0:
+                freq_idx = band_min + max_idx
+                max_freq = band_slice[max_idx]
                 
-                if magnitude > max_mag:
-                    max_mag = magnitude
-                    freq_idx = band_min + idx 
-                    max_info = MaxPeakInfo(magnitude, freq, freq_idx)
-                    
-            if max_mag > 0.0: 
+                max_info = MaxPeakInfo(max_mag, max_freq, freq_idx)
                 bin_band_maxies.append(max_info)
-
+                    
         if not bin_band_maxies:
             continue
-
+            
         max_mags = [info.max_mag for info in bin_band_maxies]
         avg_magnitude = sum(max_mags) / len(max_mags)
-
+        
         for info in bin_band_maxies:
             if info.max_mag > avg_magnitude: 
-                #TODO
-                # Go: peakTimeInBin := freqIndices[i] * binDuration / float64(len(bin))
-                # Note: Go's logic seems to incorrectly use 'freqIndices[i]' which is a frequency index,
-                # to calculate a time offset *within* the bin. In standard DSP, the time offset is 
-                # generally considered zero, or based on the bin center. 
-                # Translating the Go logic directly:
-                
-                # The freqIdx is used as an arbitrary coefficient in the Go code.
                 peak_time_in_bin = float(info.freq_idx) * bin_duration / float(len(bin_data))
-
-                # Calculate the absolute time of the peak
                 peak_time = float(bin_idx) * bin_duration + peak_time_in_bin
-
                 peaks.append(Peak(Time=peak_time, Freq=info.max_freq))
-
+                
     execution_time = time.perf_counter() - start_time
     print(f"[ExtractPeaks DEBUG] Completed in {execution_time:.4f} seconds.")
     print(f"[ExtractPeaks DEBUG] Found {len(peaks)} peaks total.")
