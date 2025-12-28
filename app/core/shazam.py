@@ -1,5 +1,6 @@
 import time
 import math
+from collections import defaultdict
 from typing import List, Dict, Tuple, Optional
 from app.models.model import Match 
 from app.db.db_clients import NewDBClient
@@ -7,7 +8,6 @@ from .fingerprint import Fingerprint, TARGET_ZONE_SIZE
 from app.utils.utils import GenerateUniqueID
 from app.utils.logger_setup import GetLogger
 from .spectrogram import Spectrogram, ExtractPeaks
-
 
 def analyze_relative_timing(matches: Dict[int, List[Tuple[int, int]]]) -> Dict[int, float]:
     """
@@ -72,19 +72,21 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
     addresses: List[int] = list(sample_fingerprint.keys())
 
     db_client, err = NewDBClient()
-    if err: return None, time.perf_counter() - start_time, err
+    if err: 
+        return None, time.perf_counter() - start_time, err
     
     # 'with'  handles  db.Close()
     with db_client: 
         m, err = db_client.GetCouples(addresses) # Dict[address, List[Couple]]
-        if err: return None, time.perf_counter() - start_time, err
+        if err: 
+            return None, time.perf_counter() - start_time, err
 
         # songID -> [(sampleTime, dbTime)]
-        matches: Dict[int, List[Tuple[int, int]]] = {} 
+        matches: Dict[int, List[Tuple[int, int]]] = defaultdict(list) 
         # songID -> earliest anchor time in DB
         timestamps: Dict[int, int] = {} 
         # songID -> {timestamp: count} (Used for filterMatches)
-        target_zones: Dict[int, Dict[int, int]] = {} 
+        target_zones: Dict[int, Dict[int, int]] = defaultdict(lambda: defaultdict(int)) 
 
         # process Matches and Timing
         for address, couples in m.items():
@@ -94,13 +96,12 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
                 song_id = couple.SongID
                 db_time_ms = couple.AnchorTimeMs
                 
-                matches.setdefault(song_id, []).append((sample_time_ms, db_time_ms))
+                matches[song_id].append((sample_time_ms, db_time_ms))
 
                 # find the earliest timestamp (for final match output)
                 if song_id not in timestamps or db_time_ms < timestamps[song_id]:
                     timestamps[song_id] = db_time_ms
 
-                target_zones.setdefault(song_id, {}).setdefault(db_time_ms, 0)
                 target_zones[song_id][db_time_ms] += 1
 
         # Filter Matches 
@@ -108,17 +109,21 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
 
         # analyze Relative Timing (Scoring)
         scores = analyze_relative_timing(matches)
-        match_list: List[Match] = []
 
+        # BATCH FETCH: Get all songs in one MongoDB query
+        song_ids = list(scores.keys())
+        songs_map, err = db_client.GetSongsByIDs(song_ids)
+        if err:
+            logger.error(f"Failed to fetch songs: {err}")
+            return None, time.perf_counter() - start_time, err
+        
         # Build Final Match List
+        match_list: List[Match] = []
         for song_id, score in scores.items():
-            song, song_exists, err = db_client.GetSongByID(song_id)
+            song = songs_map.get(song_id)
             
-            if not song_exists:
+            if not song:
                 logger.info(f"song with ID ({song_id}) doesn't exist")
-                continue
-            if err:
-                logger.info(f"failed to get song by ID ({song_id}): {err}")
                 continue
 
             match = Match(

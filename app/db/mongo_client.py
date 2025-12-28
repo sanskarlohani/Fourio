@@ -17,6 +17,7 @@ class MongoClient(DBClient):
     def __init__(self, client: PyMongoClient):
       self._client = client
       self._db = self._client[DATABASE_NAME]
+      self._ensure_indexes()
 
     def __enter__(self):
         return self
@@ -24,6 +25,25 @@ class MongoClient(DBClient):
     def __exit__(self, exc_type, exc, tb):
         self.Close()
 
+    def _ensure_indexes(self):
+        """Ensure all required indexes exist."""
+        try:
+            # index for songs collection
+            self._db["songs"].create_index(
+                [("ytID", ASCENDING), ("key", ASCENDING)],
+                unique=True,
+                background=True
+            )
+            
+            # The fingerprints._id index already exists by default
+            # But we verify it's there
+            indexes = self._db["fingerprints"].list_indexes()
+            has_id_index = any(idx.get("key", {}).get("_id") for idx in indexes)
+            if not has_id_index:
+                print("[WARNING] _id index missing on fingerprints collection")
+                
+        except Exception as e:
+            print(f"[WARNING] Error ensuring indexes: {e}")
     @staticmethod
     def _map_song_key(key: str) -> Tuple[str, str]:
       """split 'title---artist' key back to title and artist."""
@@ -37,7 +57,7 @@ class MongoClient(DBClient):
 
     def StoreFingerprints(self, fingerprints: Dict[int, Couple]) -> Optional[Exception]:
         """
-        stores fingerprints using bulk_write to prevent timeouts and 'operation cancelled' 
+        stores fingerprints using bulk_write to prevent timeouts  
         errors caused by thousands of individual update_one calls.
         """
         if not fingerprints:
@@ -79,30 +99,48 @@ class MongoClient(DBClient):
             return Exception(f"error upserting document: {e}")
 
     def GetCouples(self, addresses: List[int]) -> Tuple[Dict[int, List[Couple]], Optional[Exception]]:
-      fingerprint_collection = self._db["fingerprints"]
-      couples_map: Dict[int, List[Couple]] = {}
+        """
+        Optimized version with batching and list comprehension.
+        """
+        fingerprint_collection = self._db["fingerprints"]
 
-      try:
-          cursor = fingerprint_collection.find({"_id": {"$in": addresses}})
+        if not addresses:
+            return {}, None
+        
+        couples_map: Dict[int, List[Couple]] = {}
+        BATCH_SIZE = 1000
+
+        try:
+            # Process addresses in batches
+            for i in range(0, len(addresses), BATCH_SIZE):
+                batch = addresses[i:i + BATCH_SIZE]
+                
+                # Use aggregation pipeline for better performance
+                pipeline = [
+                    {"$match": {"_id": {"$in": batch}}},
+                    {"$project": {"_id": 1, "couples": 1}}
+                ]
+            cursor = fingerprint_collection.aggregate(pipeline, allowDiskUse=True)
           
-          for doc in cursor:
-              address = doc.get("_id")
-              couples_list = doc.get("couples", [])
+            for doc in cursor:
+                address = doc.get("_id")
+                couples_list = doc.get("couples", [])
+                
+                doc_couples = [
+                    Couple(
+                        AnchorTimeMs=item.get("AnchorTimeMs", 0),
+                        SongID=item.get("SongID", 0)
+                    )
+                    for item in couples_list
+                    if isinstance(item, dict)
+                ] 
               
-              doc_couples: List[Couple] = []
-              for item in couples_list:
-                  if isinstance(item, dict):
-                      doc_couples.append(Couple(
-                          AnchorTimeMs=item.get("AnchorTimeMs", 0),
-                          SongID=item.get("SongID", 0)
-                      ))
-              
-              if address is not None:
-                  couples_map[address] = doc_couples
+                if address is not None:
+                    couples_map[address] = doc_couples
           
-          return couples_map, None
-      except Exception as e:
-          return {}, Exception(f"error retrieving documents: {e}")
+            return couples_map, None
+        except Exception as e:
+            return {}, Exception(f"error retrieving documents: {e}")
 
 
     def TotalSongs(self) -> Tuple[int, Optional[Exception]]:
@@ -114,14 +152,6 @@ class MongoClient(DBClient):
 
     def RegisterSong(self, songTitle: str, songArtist: str, ytID: str) -> Tuple[int, Optional[Exception]]:
         songs_collection = self._db["songs"]
-
-        try:
-            songs_collection.create_index(
-                [("ytID", ASCENDING), ("key", ASCENDING)],
-                unique=True
-            )
-        except Exception as e:
-            pass
 
         try:
             songID = GenerateUniqueID()
