@@ -172,6 +172,37 @@ class MongoClient(DBClient):
 
     def GetSongByID(self, songID: int) -> Tuple[Optional[Song], bool, Optional[Exception]]:
         return self.GetSong("_id", songID)
+    
+    def GetSongsByIDs(self, songIDs: List[int]) -> Tuple[Dict[int, Song], Optional[Exception]]:
+        """Fetch multiple songs in a single MongoDB query."""
+        if not songIDs:
+            return {}, None
+        
+        songs_collection = self._db["songs"]
+        
+        try:
+            cursor = songs_collection.find(
+                {"_id": {"$in": songIDs}},
+                {"_id": 1, "key": 1, "ytID": 1}
+            )
+            
+            songs_map = {}
+            for doc in cursor:
+                songID = doc.get("_id")
+                ytID = doc.get("ytID", "")
+                key = doc.get("key", "")
+                title, artist = self._map_song_key(key)
+                
+                song = Song(
+                    Title=title,
+                    Artist=artist,
+                    YouTubeID=ytID
+                )
+                songs_map[songID] = song
+            
+            return songs_map, None
+        except Exception as e:
+            return {}, Exception(f"failed to retrieve songs: {e}")
 
     def GetSongByYTID(self, ytID: str) -> Tuple[Optional[Song], bool, Optional[Exception]]:
         return self.GetSong("ytID", ytID)
