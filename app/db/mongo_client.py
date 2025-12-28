@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple, Any, Optional
 
 from pymongo import MongoClient as PyMongoClient
-from pymongo import ASCENDING, errors as mongo_errors
+from pymongo import ASCENDING, errors as mongo_errors, UpdateOne
 
 
 from app.models.model import Couple, Song, DBClient
@@ -36,30 +36,47 @@ class MongoClient(DBClient):
       return None
 
     def StoreFingerprints(self, fingerprints: Dict[int, Couple]) -> Optional[Exception]:
-      fingerprint_collection = self._db["fingerprints"]
-      import time
-      start_time = time.perf_counter()
-      try:
-          for address, couple in fingerprints.items():
-            filter_query = {"_id": address}
-            update_query = {
-                "$push": {
-                    "couples": {
-                        "AnchorTimeMs": couple.AnchorTimeMs,
-                        "SongID": couple.SongID,
-                    }
-                }
-            }
-            fingerprint_collection.update_one(
-                filter_query, 
-                update_query, 
-                upsert=True
-            )
-          end_time = time.perf_counter()
-          print(f"Time taken for storing fingerprints: {end_time - start_time}")
-          return None
-      except Exception as e:
-          return Exception(f"error upserting document: {e}")
+        """
+        stores fingerprints using bulk_write to prevent timeouts and 'operation cancelled' 
+        errors caused by thousands of individual update_one calls.
+        """
+        if not fingerprints:
+            return None
+        fingerprint_collection = self._db["fingerprints"]
+        updates = []
+        batch_size = 5000
+        import time
+        print(f"[DB DEBUG] Preparing bulk update for {len(fingerprints)} fingerprints...")
+        start_time = time.perf_counter()
+        try:
+            for address, couple in fingerprints.items():
+                # define the operation for this specific fingerprint
+                op = UpdateOne(
+                    {"_id": address},
+                    {
+                        "$push": {
+                            "couples": {
+                                "AnchorTimeMs": couple.AnchorTimeMs,
+                                "SongID": couple.SongID,
+                            }
+                        }
+                    },
+                    upsert=True
+                )
+                updates.append(op)
+
+                # when the batch is full, send it to the database
+                if len(updates) >= batch_size:
+                    fingerprint_collection.bulk_write(updates, ordered=False)
+                    updates = [] # clear the batch
+            if updates:
+                fingerprint_collection.bulk_write(updates, ordered=False)
+
+            end_time = time.perf_counter()
+            print(f"Time taken for storing fingerprints: {end_time - start_time:.2f} seconds")
+            return None
+        except Exception as e:
+            return Exception(f"error upserting document: {e}")
 
     def GetCouples(self, addresses: List[int]) -> Tuple[Dict[int, List[Couple]], Optional[Exception]]:
       fingerprint_collection = self._db["fingerprints"]

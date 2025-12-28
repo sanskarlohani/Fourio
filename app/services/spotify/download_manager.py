@@ -123,10 +123,9 @@ def add_tags(file_path: str, track: Track) -> Optional[Exception]:
     ]
 
     try:
-        out = subprocess.run(cmd, check=True, capture_output=True)
-        
+        subprocess.run(cmd, check=True, capture_output=True) 
         # 3. Rename temporary file to the original filename
-        os.rename(str(temp_file), file_path)
+        os.replace(str(temp_file), file_path)
         return None
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to add tags: {e.stderr.decode()}", output=e.stderr.decode())
