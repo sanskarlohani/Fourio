@@ -69,7 +69,20 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
     start_time = time.perf_counter()
     logger = GetLogger()
 
-    addresses: List[int] = list(sample_fingerprint.keys())
+    print(f"[FindMatchesFGP DEBUG] Starting matching process...")
+    print(f"[FindMatchesFGP DEBUG] Total fingerprint addresses: {len(sample_fingerprint)}")
+    
+    MAX_ADDRESSES = 2000 #adjust as needed
+    all_addresses = list(sample_fingerprint.keys())
+    
+    if len(all_addresses) > MAX_ADDRESSES:
+        step = len(all_addresses) // MAX_ADDRESSES
+        addresses = all_addresses[::step]
+        print(f"[FindMatchesFGP DEBUG] Sampled {len(addresses)} addresses from {len(all_addresses)} total (step={step})")
+        logger.info(f"Sampled {len(addresses)} addresses from {len(all_addresses)} total")
+    else:
+        addresses = all_addresses
+        print(f"[FindMatchesFGP DEBUG] Using all {len(addresses)} addresses (under limit)")
 
     db_client, err = NewDBClient()
     if err: 
@@ -77,9 +90,21 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
     
     # 'with'  handles  db.Close()
     with db_client: 
+        print(f"[FindMatchesFGP DEBUG] Querying database for {len(addresses)} addresses...")
+        query_start = time.perf_counter()
+        
         m, err = db_client.GetCouples(addresses) # Dict[address, List[Couple]]
+        
+        query_time = time.perf_counter() - query_start
+        print(f"[FindMatchesFGP DEBUG] Database query completed in {query_time:.4f} seconds")
+        print(f"[FindMatchesFGP DEBUG] Retrieved {len(m)} matching addresses from DB")
+        
         if err: 
             return None, time.perf_counter() - start_time, err
+
+        # Calculate total couples retrieved
+        total_couples = sum(len(couples) for couples in m.values())
+        print(f"[FindMatchesFGP DEBUG] Total couples retrieved: {total_couples}")
 
         # songID -> [(sampleTime, dbTime)]
         matches: Dict[int, List[Tuple[int, int]]] = defaultdict(list) 
@@ -88,6 +113,9 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
         # songID -> {timestamp: count} (Used for filterMatches)
         target_zones: Dict[int, Dict[int, int]] = defaultdict(lambda: defaultdict(int)) 
 
+        print(f"[FindMatchesFGP DEBUG] Processing matches...")
+        process_start = time.perf_counter()
+        
         # process Matches and Timing
         for address, couples in m.items():
             sample_time_ms = sample_fingerprint[address]
@@ -104,43 +132,82 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
 
                 target_zones[song_id][db_time_ms] += 1
 
+        process_time = time.perf_counter() - process_start
+        print(f"[FindMatchesFGP DEBUG] Match processing completed in {process_time:.4f} seconds")
+        print(f"[FindMatchesFGP DEBUG] Found {len(matches)} unique songs with matches")
+
         # Filter Matches 
         # To enable filtering: matches = filter_matches(10, matches, target_zones)
 
         # analyze Relative Timing (Scoring)
+        print(f"[FindMatchesFGP DEBUG] Analyzing relative timing and scoring...")
+        scoring_start = time.perf_counter()
+        
         scores = analyze_relative_timing(matches)
+        
+        scoring_time = time.perf_counter() - scoring_start
+        print(f"[FindMatchesFGP DEBUG] Scoring completed in {scoring_time:.4f} seconds")
+        print(f"[FindMatchesFGP DEBUG] Scored {len(scores)} songs")
 
         # BATCH FETCH: Get all songs in one MongoDB query
         song_ids = list(scores.keys())
+        print(f"[FindMatchesFGP DEBUG] Fetching song details for {len(song_ids)} songs...")
+        fetch_start = time.perf_counter()
+        
         songs_map, err = db_client.GetSongsByIDs(song_ids)
+        
+        fetch_time = time.perf_counter() - fetch_start
+        print(f"[FindMatchesFGP DEBUG] Song fetch completed in {fetch_time:.4f} seconds")
+        print(f"[FindMatchesFGP DEBUG] Retrieved {len(songs_map)} song details")
+        
         if err:
             logger.error(f"Failed to fetch songs: {err}")
             return None, time.perf_counter() - start_time, err
         
         # Build Final Match List
+        print(f"[FindMatchesFGP DEBUG] Building final match list...")
         match_list: List[Match] = []
+        skipped_songs = 0
+        
         for song_id, score in scores.items():
             song = songs_map.get(song_id)
             
             if not song:
                 logger.info(f"song with ID ({song_id}) doesn't exist")
+                skipped_songs += 1
                 continue
 
             match = Match(
                 SongID=song_id,
-                Title=song.Title,
-                Artist=song.Artist,
+                SongTitle=song.Title,
+                SongArtist=song.Artist,
                 YouTubeID=song.YouTubeID,
                 Timestamp=timestamps.get(song_id, 0),
                 Score=score
             )
             match_list.append(match)
 
-    # sort Matches by Score 
-    match_list.sort(key=lambda m: m.Score, reverse=True)
+        if skipped_songs > 0:
+            print(f"[FindMatchesFGP DEBUG] Skipped {skipped_songs} songs (not found in DB)")
 
+        # sort Matches by Score
+        print(f"[FindMatchesFGP DEBUG] Sorting {len(match_list)} matches by score...")
+        match_list.sort(key=lambda m: m.Score, reverse=True)
+        
+        if match_list:
+            print(f"[FindMatchesFGP DEBUG] Top match: '{match_list[0].SongTitle}' by {match_list[0].SongArtist} (Score: {match_list[0].Score})")
+            if len(match_list) > 1:
+                print(f"[FindMatchesFGP DEBUG] 2nd match: '{match_list[1].SongTitle}' by {match_list[1].SongArtist} (Score: {match_list[1].Score})")
+
+    total_time = time.perf_counter() - start_time
+    print(f"[FindMatchesFGP DEBUG] Total matching process completed in {total_time:.4f} seconds")
+    print(f"[FindMatchesFGP DEBUG] Breakdown:")
+    print(f"  - DB Query: {query_time:.4f}s ({query_time/total_time*100:.1f}%)")
+    print(f"  - Processing: {process_time:.4f}s ({process_time/total_time*100:.1f}%)")
+    print(f"  - Scoring: {scoring_time:.4f}s ({scoring_time/total_time*100:.1f}%)")
+    print(f"  - Fetch Songs: {fetch_time:.4f}s ({fetch_time/total_time*100:.1f}%)")
+    
     return match_list, time.perf_counter() - start_time, None
-
 
 def FindMatches(audio_sample: List[float], audio_duration: float, sample_rate: int) -> Tuple[List[Match], float, Optional[Exception]]:
     """

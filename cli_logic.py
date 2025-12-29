@@ -61,13 +61,13 @@ def find(file_path: str):
 
     print(f"\n{msg}")
     for match in top_matches:
-      print(f"\t- {match.Title} by {match.Artist}, score: {match.Score:.2f}")
+      print(f"\t- {match.SongTitle} by {match.SongArtist}, score: {match.Score:.2f}")
 
     print(f"\nSearch took: {duration_str}")
     
     # Final Prediction
     top_match = top_matches[0]
-    print(f"\nFinal prediction: {top_match.Title} by {top_match.Artist} , score: {top_match.Score:.2f}")
+    print(f"\nFinal prediction: {top_match.SongTitle} by {top_match.SongArtist} , score: {top_match.Score:.2f}")
 
 
 def download(spotify_url: str):

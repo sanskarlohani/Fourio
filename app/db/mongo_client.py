@@ -103,16 +103,24 @@ class MongoClient(DBClient):
         Optimized version with batching and list comprehension.
         """
         fingerprint_collection = self._db["fingerprints"]
-
+        
         if not addresses:
             return {}, None
-        
-        couples_map: Dict[int, List[Couple]] = {}
-        BATCH_SIZE = 1000
 
+        print(f"[GetCouples DEBUG] Fetching couples for {len(addresses)} addresses...")
+        couples_map: Dict[int, List[Couple]] = {}
+        BATCH_SIZE = 1000  # Process in batches to avoid overwhelming MongoDB
+        
+        num_batches = (len(addresses) + BATCH_SIZE - 1) // BATCH_SIZE
+        print(f"[GetCouples DEBUG] Processing in {num_batches} batches of {BATCH_SIZE}")
+        
         try:
+            import time as time_module
+            batch_times = []
+            
             # Process addresses in batches
-            for i in range(0, len(addresses), BATCH_SIZE):
+            for batch_num, i in enumerate(range(0, len(addresses), BATCH_SIZE), 1):
+                batch_start = time_module.perf_counter()
                 batch = addresses[i:i + BATCH_SIZE]
                 
                 # Use aggregation pipeline for better performance
@@ -120,26 +128,40 @@ class MongoClient(DBClient):
                     {"$match": {"_id": {"$in": batch}}},
                     {"$project": {"_id": 1, "couples": 1}}
                 ]
-            cursor = fingerprint_collection.aggregate(pipeline, allowDiskUse=True)
-          
-            for doc in cursor:
-                address = doc.get("_id")
-                couples_list = doc.get("couples", [])
                 
-                doc_couples = [
-                    Couple(
-                        AnchorTimeMs=item.get("AnchorTimeMs", 0),
-                        SongID=item.get("SongID", 0)
-                    )
-                    for item in couples_list
-                    if isinstance(item, dict)
-                ] 
-              
-                if address is not None:
-                    couples_map[address] = doc_couples
-          
+                cursor = fingerprint_collection.aggregate(pipeline, allowDiskUse=True)
+                
+                batch_couples = 0
+                for doc in cursor:
+                    address = doc.get("_id")
+                    couples_list = doc.get("couples", [])
+                    
+                    # Use list comprehension for faster processing
+                    doc_couples = [
+                        Couple(
+                            AnchorTimeMs=item.get("AnchorTimeMs", 0),
+                            SongID=item.get("SongID", 0)
+                        )
+                        for item in couples_list
+                        if isinstance(item, dict)
+                    ]
+                    
+                    if address is not None:
+                        couples_map[address] = doc_couples
+                        batch_couples += len(doc_couples)
+                
+                batch_time = time_module.perf_counter() - batch_start
+                batch_times.append(batch_time)
+                print(f"[GetCouples DEBUG] Batch {batch_num}/{num_batches}: {len(batch)} addresses, {batch_couples} couples in {batch_time:.4f}s")
+            
+            total_couples = sum(len(c) for c in couples_map.values())
+            avg_batch_time = sum(batch_times) / len(batch_times) if batch_times else 0
+            print(f"[GetCouples DEBUG] Completed: {len(couples_map)} addresses matched, {total_couples} total couples")
+            print(f"[GetCouples DEBUG] Average batch time: {avg_batch_time:.4f}s")
+            
             return couples_map, None
         except Exception as e:
+            print(f"[GetCouples ERROR] {e}")
             return {}, Exception(f"error retrieving documents: {e}")
 
 
