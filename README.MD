@@ -19,7 +19,7 @@
 
 ## Description
 
-**Fourio** is a command-line implementation of a music recognition system inspired by **Shazam**.The name Fourio is a portmanteau of **"Fourier"** and **"Audio"** named after the [**Fourier Transform**](https://en.wikipedia.org/wiki/Fourier_transform).It analyzes song fingerprints, detects matches from local or downloaded tracks, and integrates with Spotify and YouTube for metadata and previews.  
+**Fourio** is a command-line implementation of a music recognition system inspired by **Shazam**.The name Fourio is a portmanteau of **"Fourier"** and **"Audio"** named after the [**Fourier Transform**](https://en.wikipedia.org/wiki/Fourier_transform).It analyzes song fingerprints, detects matches from local or downloaded tracks, and integrates with Spotify and YouTube for metadata and previews. It has addtional features like a REST APIs, Multiple DB support like MongoDB and SQLite.
 
 This version of **Fourio** is fully written in **Python**, powered by:
 - ⚡ **FastAPI** — backend API framework for high-performance web services  
@@ -108,9 +108,6 @@ cd fourio
 # Create virtual environment (using uv)
 uv venv
 
-# Activate it
-uv run bash          # On PowerShell → uv run powershell
-
 # Install dependencies
 uv sync
 ```
@@ -174,13 +171,25 @@ uv run python cli.py --help
 ## 🎧 Commands
 | Command                           | Description                                               |
 | --------------------------------- | --------------------------------------------------------- |
-| `find <path_to_wav>`              | Analyze a WAV file and find matching fingerprints         |
+| `find <path_to_audio_file>`       | Analyze audio file in any format and find matching fingerprints         |
 | `download <spotify_url>`          | Download and process a song/album/playlist from Spotify   |
 | `save <path_or_dir> [--force/-f]` | Fingerprint and save local songs                          |
 | `erase`                           | Clear all stored songs and fingerprints from the database |
-| `serve --proto http --port 8000`  | Start the FastAPI backend server                          |
+<!-- | `serve --proto http --port 8000`  | Start the FastAPI backend server                          | -->
+# 🔌REST api Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/fourio/match` | POST | Match audio fingerprint against database and return top 10 matches |
+| `/recordings/save` | POST | Save base64-encoded audio recording as WAV file |
+| `/songs/total` | GET | Get total number of indexed songs in database |
+| `/songs/download` | POST | Download and process Spotify track/album/playlist |
 
 ### 💡 Examples
+#### 📌Run Server
+```bash
+uv run python -m uvicorn app.main:app --reload
+```
 #### ▶ Download a Spotify track
 ```bash
 uv run python cli.py download https://open.spotify.com/track/4pqwGuGu34g8KtfN8LDGZm
@@ -188,7 +197,7 @@ uv run python cli.py download https://open.spotify.com/track/4pqwGuGu34g8KtfN8LD
 
 #### 🔎 Find a song match
 ```bash
-uv run python cli.py find songs/Voila.wav
+uv run python cli.py find songs/Voila.mp3
 ```
 
 #### 💾 Save local songs
@@ -219,41 +228,43 @@ uv run python cli.py serve --proto http --port 8000
 
 ## 🧑‍💻 Author
 
-### Rudra Narayan 
+### Rudra Narayan Sahoo
  - Connect with me on [LinkedIn](https://www.linkedin.com/in/rudra404/).
-  - Check out my other [GitHub](https://github.com/RudraNarayan94) projects.
+ - Check out my other [GitHub](https://github.com/RudraNarayan94) projects.
 
 
 
 ## 🚀 Future Roadmap
 
-Fourio will gradually evolve into a full-stack, Shazam-style system with a modern UI and scalable backend. Feel free to contribute or suggest features!
+Fourio have the potential to gradually evolve into a full-stack, Shazam-style system with a modern UI and scalable backend. Feel free to contribute or suggest features!
 
 ### 🎧 Frontend (React)
+- Modern UI for song matching & downloads  
 - Microphone recording & PCM extraction  
 - Client-side fingerprint generation  
-- Simple waveform visualization  
+- WebSocket for real-time matching  
+<!-- - Simple waveform visualization   -->
 
 ### ⚙️ Backend (FastAPI)
-- `/find` → match fingerprints  
-- `/download` → index Spotify tracks  
-- `/songs` → list stored entries  
-- Faster async matching & caching  
+- WEBSOCKETS Endpoints for song processing & matching 
+- Redis for backend service 
+<!-- - `/songs` → list stored entries   --> 
+<!-- - Faster async matching & caching   -->
+
 
 ### 🧠 Fingerprinting Engine
-- Cleaner service-layer architecture  
+<!-- - Cleaner service-layer architecture   -->
+- Better DB Schema for fingerprints 
 - Tunable fingerprint density & thresholds  
-- Incremental database indexing  
 
 ### ☁️ Deployment
 - Docker setup  
 - Optional FFmpeg/GPU acceleration  
-- Remote MongoDB sync  
+<!-- - Remote MongoDB sync   -->
 
-### 🧩 Long-Term Ideas
+<!-- ### 🧩 Long-Term Ideas
 - Browser “Music Finder” mode  
-- User library for recordings  
-- WebAssembly experiments for client-side matching  
+- User library for recordings   -->
 
 
 ---
