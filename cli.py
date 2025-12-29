@@ -38,7 +38,7 @@ def main():
 # --- CLI Subcommand Definitions (@app.command) ---
 # ----------------------------------------------------------------------
 
-@app.command(name="find", help="Analyzes a WAV file and searches for matching songs in the database.")
+@app.command(name="find", help="Analyzes any audio file and searches for matching songs in the database.")
 def find_command(file_path: str = typer.Argument(..., help="Path to the WAV file to analyze (e.g., audio.wav).")):
     
   cli_logic.find(file_path)

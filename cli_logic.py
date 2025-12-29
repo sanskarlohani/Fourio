@@ -7,12 +7,13 @@ from pathlib import Path
 
 # project imports
 from app.services.wav.wav_io import ReadWavInfo, WavBytesToSamples, GetMetadata
+from app.services.wav.wav_converter import ConvertToWAV
 from app.core.shazam import FindMatches
 from app.services.spotify.youtube_service import GetYoutubeId
 from app.services.spotify.download_manager import ProcessAndSaveSong, DlSingleTrack, DlPlaylist, DlAlbum
 from app.utils.logger_setup import GetLogger
 from app.db.db_clients import NewDBClient
-from app.utils.file_io import CreateFolder, MoveFile
+from app.utils.file_io import CreateFolder, MoveFile, DeleteFile
 from app.models.model import Track
 logger = GetLogger()
 SONGS_DIR = "songs"
@@ -26,48 +27,73 @@ def yellow_print(message: str):
 # --- CLI Command Implementations ---
 # ----------------------------------------------------------------------
 
-def find(file_path: str):    
-    # 1. Read WAV Info and Samples
-    wav_info, err = ReadWavInfo(file_path)
-    if err:
-        yellow_print(f"Error reading wave info: {err}")
+def find(file_path: str):
+    input_path = Path(file_path)
+    
+    if not input_path.exists():
+        yellow_print(f"Error: File does not exist: {file_path}")
         return
+    
+    # checking if needs conversion
+    original_file = file_path
+    is_wav = input_path.suffix.lower() == '.wav'
+    needs_cleanup = False
+    wav_file_path = file_path
+    if not is_wav:
+        print(f"Converting {input_path.suffix} to WAV format...")
+        wav_file_path, err = ConvertToWAV(file_path, channels=1)
+        if err:
+            yellow_print(f"Error converting file to WAV: {err}")
+            return
+        needs_cleanup = True 
+        print(f"Conversion complete: {wav_file_path}")
+
+    try:
+        # 1. Read WAV Info and Samples
+        wav_info, err = ReadWavInfo(wav_file_path)
+        if err:
+            yellow_print(f"Error reading wave info: {err}")
+            return
+            
+        samples, err = WavBytesToSamples(wav_info.Data)
+        if err:
+            yellow_print(f"Error converting to samples: {err}")
+            return
+
+        # 2. Find Matches
+        start_time = time.time()
+        matches, _, err = FindMatches(samples, wav_info.Duration, wav_info.SampleRate)
+        search_duration = time.time() - start_time
         
-    samples, err = WavBytesToSamples(wav_info.Data)
-    if err:
-        yellow_print(f"Error converting to samples: {err}")
-        return
+        if err:
+            yellow_print(f"Error finding matches: {err}")
+            return
 
-    # 2. Find Matches
-    start_time = time.time()
-    matches, _, err = FindMatches(samples, wav_info.Duration, wav_info.SampleRate)
-    search_duration = time.time() - start_time
-    
-    if err:
-        yellow_print(f"Error finding matches: {err}")
-        return
+        # 3. Output Results 
+        duration_str = f"{search_duration:.4f}s" 
 
-    # 3. Output Results
-    
-    duration_str = f"{search_duration:.4f}s" 
+        if not matches:
+            print("\nNo match found.")
+            print(f"\nSearch took: {duration_str}")
+            return
 
-    if not matches:
-        print("\nNo match found.")
+        top_matches = matches[:20]
+        msg = "Top 20 matches:" if len(matches) >= 20 else "Matches:"
+
+        print(f"\n{msg}")
+        for match in top_matches:
+            print(f"\t- {match.SongTitle} by {match.SongArtist}, score: {match.Score:.2f}")
         print(f"\nSearch took: {duration_str}")
-        return
-
-    top_matches = matches[:20]
-    msg = "Top 20 matches:" if len(matches) >= 20 else "Matches:"
-
-    print(f"\n{msg}")
-    for match in top_matches:
-      print(f"\t- {match.SongTitle} by {match.SongArtist}, score: {match.Score:.2f}")
-
-    print(f"\nSearch took: {duration_str}")
     
-    # Final Prediction
-    top_match = top_matches[0]
-    print(f"\nFinal prediction: {top_match.SongTitle} by {top_match.SongArtist} , score: {top_match.Score:.2f}")
+        # Final Prediction
+        top_match = top_matches[0]
+        print(f"\nFinal prediction: {top_match.SongTitle} by {top_match.SongArtist} , score: {top_match.Score:.2f}")
+    finally:
+        if needs_cleanup and wav_file_path != original_file:
+            print(f"\nCleaning up temporary file: {wav_file_path}")
+            err = DeleteFile(wav_file_path)
+            if err:
+                yellow_print(f"Warning: Failed to delete temporary file: {err}")
 
 
 def download(spotify_url: str):
