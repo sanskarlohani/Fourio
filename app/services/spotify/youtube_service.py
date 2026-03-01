@@ -36,7 +36,9 @@ HTTP_CLIENT = requests.Session()
 
 
 def convert_string_duration_to_seconds(duration_str: str) -> int:
-    """convertStringDurationToSeconds function."""
+    """
+    Converts a duration string in the format HH:MM:SS to seconds.
+    """
     parts = list(map(int, duration_str.split(':')))[::-1]
     seconds = 0
     if len(parts) >= 1:
