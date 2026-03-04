@@ -13,9 +13,7 @@ from app.utils.logger_setup import GetLogger
 from app.utils.file_io import DeleteFile, CreateFolder
 from .wav_converter import ReformatWAV 
 import wave
-WAV_HEADER_SIZE = 44 # Standard size of a minimal WAV header
 
-# --- Data Structures ---
 class WavInfo(NamedTuple):
     Channels: int
     SampleRate: int
@@ -77,56 +75,8 @@ def WriteWavFile(filename: str, data: bytes, sample_rate: int, channels: int, bi
     except Exception as e:
         return e
 
-# def ReadWavInfo(filename: str) -> Tuple[Optional[WavInfo], Optional[Exception]]:
-#     """
-#     reads and validates the WAV header.
-#     """
-#     try:
-#         # 1. Read entire file contents
-#         data = Path(filename).read_bytes()
-
-#         if len(data) < WAV_HEADER_SIZE:
-#             return None, Exception("invalid WAV file size (too small)")
-
-#         # 2. Read header chunks using struct.unpack
-#         # Format string: 4s I 4s 4s I H H I I H H 4s I 
-#         header_data = data[:WAV_HEADER_SIZE]
-#         header = struct.unpack('<4sI4s4sIHHIHH4sI', header_data)
-        
-#         chunk_id = header[0].decode('ascii')
-#         file_format = header[2].decode('ascii')
-#         audio_format = header[5]
-#         num_channels = header[6]
-#         sample_rate = header[7]
-#         bits_per_sample = header[11]
-#         subchunk2_size = header[13]
-
-#         if chunk_id != "RIFF" or file_format != "WAVE" or audio_format != 1:
-#             return None, Exception("invalid WAV header format (not RIFF/WAVE/PCM)")
-
-#         # 3. Extract information
-#         raw_audio_data = data[WAV_HEADER_SIZE:]
-        
-#         # 4. Calculate Duration (assumes 16-bit PCM for simple duration calculation)
-#         if bits_per_sample == 16:
-#             # Duration = TotalBytes / (Channels * BytesPerSample * SampleRate)
-#             duration = float(len(raw_audio_data)) / float(num_channels * 2 * sample_rate)
-#         else:
-#             return None, Exception("unsupported bits per sample format (only 16-bit supported for reading)")
-
-#         info = WavInfo(
-#             Channels=num_channels,
-#             SampleRate=sample_rate,
-#             Data=raw_audio_data,
-#             Duration=duration
-#         )
-#         return info, None
-
-#     except Exception as e:
-#         return None, e
-
 def ReadWavInfo(filename: str) -> Tuple[Optional[WavInfo], Optional[Exception]]:
-    """Safely read WAV metadata using Python's wave module"""
+    """read WAV metadata using wave module"""
     try:
         with wave.open(filename, 'rb') as wav:
             channels = wav.getnchannels()
@@ -135,7 +85,7 @@ def ReadWavInfo(filename: str) -> Tuple[Optional[WavInfo], Optional[Exception]]:
             frame_count = wav.getnframes()
 
             if sample_width != 2:
-                # 2 bytes == 16 bits. This matches the Go code's assumption.
+                # 2 bytes == 16 bits. 
                 return None, Exception("unsupported bits per sample format (only 16-bit supported for reading)")
             
             duration = frame_count / float(sample_rate)
@@ -206,7 +156,6 @@ def GetMetadata(file_path: str) -> Tuple[FFmpegMetadata, Optional[Exception]]:
 
 def ProcessRecording(rec_data: RecordData, save_recording: bool) -> Tuple[Optional[List[float]], Optional[Exception]]:
     """
-    Corresponds to the Go ProcessRecording function.
     Decodes base64 audio data, saves it as a temporary WAV, reformats it to mono, and returns float samples.
     """
     logger = GetLogger()
@@ -229,7 +178,6 @@ def ProcessRecording(rec_data: RecordData, save_recording: bool) -> Tuple[Option
     file_path = os.path.join(tmp_dir, file_name)
     
     # 3. Write Initial WAV File
-    # Note: Go used recData.SampleSize for bits_per_sample
     err = WriteWavFile(file_path, decoded_audio_data, rec_data.SampleRate, rec_data.Channels, rec_data.SampleSize)
     if err:
         DeleteFile(file_path)
