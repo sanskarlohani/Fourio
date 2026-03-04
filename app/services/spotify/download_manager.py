@@ -47,7 +47,7 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
         if err or not yt_id:
             return None, err
         
-        # 3: Check if the *new* YouTube ID also exists
+        # 3: Check if the new YouTube ID also exists
         ytid_exists, err = YtIDExists(yt_id)
         if err:
             return None, Exception(f"error checking YT ID existence (retry): {err}")
@@ -60,7 +60,7 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
 
 def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]:
     """
-    NOTE: we use yt-dlp as the standard Python tools. youtube-dl, pytube are deprecated.
+    NOTE: here yt-dlp used as the standard tools. youtube-dl, pytube are deprecated.
     """
     
     # 1. Path Validation
@@ -280,7 +280,8 @@ def process_single_track_task(track: Track, path: str) -> Optional[Exception]:
 def DlSingleTrack(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
     logger.info(f"Getting track info for url: {url}")
     track_info, err = TrackInfo(url)
-    if err: return 0, err
+    if err: 
+        return 0, err
     
     logger.info("Now downloading track")
     return dl_track_concurrent([track_info], save_path)
@@ -288,7 +289,8 @@ def DlSingleTrack(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
 
 def DlPlaylist(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
     tracks, err = PlaylistInfo(url)
-    if err: return 0, err
+    if err: 
+        return 0, err
 
     time.sleep(1)
     logger.info("Now downloading playlist")
@@ -297,7 +299,8 @@ def DlPlaylist(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
 
 def DlAlbum(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
     tracks, err = AlbumInfo(url)
-    if err: return 0, err
+    if err: 
+        return 0, err
 
     time.sleep(1)
     logger.info("Now downloading album")
