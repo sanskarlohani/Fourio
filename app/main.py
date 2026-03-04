@@ -20,7 +20,7 @@ init_directories()
 
 app = FastAPI(
   title="Fourio Backend",
-  description="Backend service for audio fingerprinting and Spotify integration.",
+  description="Backend service for audio fingerprinting",
   version="1.0.0"
 )
 
