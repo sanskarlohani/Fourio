@@ -83,16 +83,25 @@ class RedisClient(DBClient):
             return 0, e
 
     # ---------------- Fingerprints ----------------
-    def StoreFingerprints(self, fingerprints: Dict[int, Couple]) -> Optional[Exception]:
-        try:
-            pipe = self._client.pipeline()
-            for address, couple in fingerprints.items():
-                key = f"{REDIS_FINGERPRINT_PREFIX}{address}"
-                pipe.rpush(key, json.dumps({"AnchorTimeMs": couple.AnchorTimeMs, "SongID": couple.SongID}))
-            pipe.execute()
-            return None
-        except Exception as e:
-            return e
+    def StoreFingerprints(self, fingerprints: Dict[int, Couple], batch_size: int = 5000) -> Optional[Exception]:
+      """
+      Store fingerprints in Redis using pipelines in chunks to prevent
+      memory overload or long-running single pipeline.
+      
+      """
+      try:
+          items = list(fingerprints.items())
+          total = len(items)
+          for i in range(0, total, batch_size):
+              chunk = items[i:i + batch_size]
+              pipe = self._client.pipeline()
+              for address, couple in chunk:
+                  key = f"{REDIS_FINGERPRINT_PREFIX}{address}"
+                  pipe.rpush(key, json.dumps({"AnchorTimeMs": couple.AnchorTimeMs, "SongID": couple.SongID}))
+              pipe.execute()
+          return None
+      except Exception as e:
+          return e
 
     def GetCouples(self, addresses: List[int]) -> Tuple[Dict[int, List[Couple]], Optional[Exception]]:
         couples_map: Dict[int, List[Couple]] = {}
