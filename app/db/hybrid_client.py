@@ -1,10 +1,9 @@
-import time
 from typing import Dict, List, Tuple, Optional, Any
 
 from app.models.model import Couple, Song, DBClient
 from .mongo_client import NewMongoClient, MongoClient
 from .redis_client import NewRedisClient, RedisClient
-
+from .background_job import schedule_redis_fingerprint_store
 class HybridClient(DBClient):
     """
     Hybrid DB client: Redis for speed, MongoDB for durability.
@@ -72,12 +71,9 @@ class HybridClient(DBClient):
 
     # ---------------- Fingerprints ----------------
     def StoreFingerprints(self, fingerprints: Dict[int, Couple]) -> Optional[Exception]:
-        err1 = self._mongo.StoreFingerprints(fingerprints)  # durable first
-        err2 = self._redis.StoreFingerprints(fingerprints)  # speed layer
-        if err1:
-            return err1
-        if err2:
-            print(f"[Hybrid Warning] Redis StoreFingerprints failed: {err2}")
+        err = self._mongo.StoreFingerprints(fingerprints)  # durable first
+        if not err:
+            schedule_redis_fingerprint_store(self._redis, fingerprints) 
         return None
 
     def GetCouples(self, addresses: List[int]) -> Tuple[Dict[int, List[Couple]], Optional[Exception]]:

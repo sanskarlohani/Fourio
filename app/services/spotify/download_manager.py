@@ -187,7 +187,7 @@ def ProcessAndSaveSong(song_file_path: str, song_title: str, song_artist: str, y
         print(f"Storing fingerprints for {song_title} by {song_artist}...")
         err = db_client.StoreFingerprints(fingerprints)
         if err:
-            # Crucial: Delete song if fingerprint storage fails
+            # Delete song if fingerprint storage fails
             # print("Storing fingerprints for {song_title} by {song_artist} ")
             db_client.DeleteSongByID(song_id)
             logger.error(f"Failed to store fingerprints: {err}")
