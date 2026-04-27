@@ -137,7 +137,8 @@ def FindMatchesFGP(sample_fingerprint: Dict[int, int]) -> Tuple[List[Match], flo
         print(f"[FindMatchesFGP DEBUG] Found {len(matches)} unique songs with matches")
 
         # Filter Matches 
-        # To enable filtering: matches = filter_matches(10, matches, target_zones)
+        # matches = filter_matches(10, matches, target_zones)
+        matches = filter_matches(4, matches, target_zones)
 
         # analyze Relative Timing (Scoring)
         print(f"[FindMatchesFGP DEBUG] Analyzing relative timing and scoring...")
