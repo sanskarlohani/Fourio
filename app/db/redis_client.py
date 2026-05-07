@@ -132,9 +132,12 @@ class RedisClient(DBClient):
 
 
 # --- factory method ---
-def NewRedisClient(host: str = "localhost", port: int = 6379, db: int = 0) -> Tuple[Optional[RedisClient], Optional[Exception]]:
+def NewRedisClient(redis_url: str, host: str = "localhost", port: int = 6379, db: int = 0) -> Tuple[Optional[RedisClient], Optional[Exception]]:
     try:
-        client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+        if redis_url:
+            client = redis.Redis.from_url(redis_url, decode_responses=True)
+        else:
+            client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
         client.ping()
         return RedisClient(client), None
     except Exception as e:

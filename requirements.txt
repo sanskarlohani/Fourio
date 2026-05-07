@@ -145,6 +145,8 @@ python-multipart==0.0.20
     # via backend (pyproject.toml)
 pyyaml==6.0.3
     # via uvicorn
+redis==7.4.0
+    # via backend (pyproject.toml)
 requests==2.32.5
     # via
     #   backend (pyproject.toml)
