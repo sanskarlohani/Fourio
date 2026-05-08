@@ -18,6 +18,11 @@ FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
+# Install ffmpeg
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+    
 # Copy only the virtualenv and source — no uv, no build tools
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/app ./app
