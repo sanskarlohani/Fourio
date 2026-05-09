@@ -11,7 +11,7 @@ logger = GetLogger()
 
 def NewDBClient() -> Tuple[Optional[DBClient], Optional[Exception]]:
     DBtype = GetEnv("DB_TYPE", "sqlite")
-    print("DB_TYPE =", DBtype)
+    # print("DB_TYPE =", DBtype)
 
     if DBtype == "mongo" or DBtype == "hybrid":
         dbUsername = GetEnv("DB_USER")
