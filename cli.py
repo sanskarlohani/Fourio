@@ -10,15 +10,13 @@ from app.utils.file_io import CreateFolder
 # --- Configuration ---
 app = typer.Typer(
   name="Fourio",
-  help="Shazam-style audio fingerprinting and music management CLI.", 
+  help="Audio fingerprinting CLI.", 
 )
 logger = GetLogger()
 SONGS_DIR = "songs" 
 TMP_DIR = "tmp"
 
-def main():
-    """Entry point handler that runs before any command."""
-    
+def main():    
     load_dotenv() 
         
     err = CreateFolder(TMP_DIR)
@@ -39,7 +37,7 @@ def main():
 # ----------------------------------------------------------------------
 
 @app.command(name="find", help="Analyzes any audio file and searches for matching songs in the database.")
-def find_command(file_path: str = typer.Argument(..., help="Path to the WAV file to analyze (e.g., audio.wav).")):
+def find_command(file_path: str = typer.Argument(..., help="Path to the audio file to analyze (e.g., audio.wav, audio.mp3, audio.m4a).")):
     
   cli_logic.find(file_path)
 
@@ -69,25 +67,6 @@ def save_command(
 ):
     
   cli_logic.save(file_path, force)
-
-
-# @app.command(name="serve", help="Starts the FastAPI web server for API access (HTTP/HTTPS).")
-# def serve_command(
-#     protocol: str = typer.Option(
-#         "http", 
-#         "--proto", 
-#         help="Protocol to use (http or https)."
-#     ),
-#     port: str = typer.Option(
-#         "5000", 
-#         "-p", 
-#         help="Port to use."
-#     )
-# ):
-#     """Corresponds to the Go 'serve' case: serve(*protocol, *port)."""
-    
-#     # Delegate logic to the cmd.py module
-#     cli_logic.serve(protocol, port)
 
 
 if __name__ == "__main__":

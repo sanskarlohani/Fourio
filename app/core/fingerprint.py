@@ -37,7 +37,7 @@ def Fingerprint(peaks: List[Peak], songID: int) -> Dict[int, Couple]:
     """
     generates fingerprints from peaks using the 'target zone' method.
     """
-    start_time = time.perf_counter()
+    # start_time = time.perf_counter()
     fingerprints: Dict[int, Couple] = {}
 
     for i, anchor in enumerate(peaks):
@@ -53,6 +53,6 @@ def Fingerprint(peaks: List[Peak], songID: int) -> Dict[int, Couple]:
                 AnchorTimeMs=anchor_time_ms, 
                 SongID=songID
             )
-    end_time = time.perf_counter()
-    print(f"Time taken for fingerprinting: {end_time - start_time}")       
+    # end_time = time.perf_counter()
+    # print(f"Time taken for fingerprinting: {end_time - start_time}")       
     return fingerprints

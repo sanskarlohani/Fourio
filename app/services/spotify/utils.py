@@ -4,7 +4,7 @@ import subprocess
 import platform
 import pathlib
 from typing import Tuple, Optional
-from app.db.db_clients import NewDBClient
+from app.db.db_clients import get_db_client, NewDBClient
 
 
 def EncodeParam(s: str) -> str:
@@ -92,7 +92,6 @@ def convertStereoToMono(stereo_file_path: str) -> Tuple[Optional[bytes], Optiona
     
     try:
         # 2. Check the number of channels using ffprobe
-        # The Go logic is explicitly translated here to check if conversion is needed
         cmd = [
             "ffprobe", "-v", "error", "-show_entries", "stream=channels", 
             "-of", "default=noprint_wrappers=1:nokey=1", stereo_file_path
@@ -105,7 +104,6 @@ def convertStereoToMono(stereo_file_path: str) -> Tuple[Optional[bytes], Optiona
         
         if channels != "1":
             # 3. Convert stereo to mono using ffmpeg pan filter
-            # Go: cmd = exec.Command("ffmpeg", "-i", stereoFilePath, "-af", "pan=mono|c0=c0", monoFilePath)
             cmd = [
                 "ffmpeg", "-i", stereo_file_path, "-af", "pan=mono|c0=c0", str(mono_file_path)
             ]
