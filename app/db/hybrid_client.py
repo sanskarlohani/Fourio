@@ -107,14 +107,13 @@ class HybridClient(DBClient):
         return err2
 
 
-# --- factory method ---
-def NewHybridClient() -> Tuple[Optional[HybridClient], Optional[Exception]]:
+def NewHybridClient(dbUri: str, redisUri: str) -> Tuple[Optional[HybridClient], Optional[Exception]]:
     # Create Redis client
-    redis_client, err = NewRedisClient()
+    redis_client, err = NewRedisClient(redisUri)
     if err:
         return None, err
     # Create Mongo client
-    mongo_client, err = NewMongoClient("mongodb://localhost:27017")
+    mongo_client, err = NewMongoClient(dbUri)
     if err:
         return None, err
     # Return hybrid

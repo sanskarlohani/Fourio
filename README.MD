@@ -19,7 +19,7 @@
 
 ## Description
 
-**Fourio** is a command-line implementation of a music recognition system inspired by **Shazam**.The name Fourio is a portmanteau of **"Fourier"** and **"Audio"** named after the [**Fourier Transform**](https://en.wikipedia.org/wiki/Fourier_transform).It analyzes song fingerprints, detects matches from local or downloaded tracks, and integrates with Spotify and YouTube for metadata and previews. It has addtional features like a REST APIs, Multiple DB support like MongoDB and SQLite.
+**Fourio** is a command-line implementation of a music recognition system inspired by **Shazam**.The name is a portmanteau of **"Fourier"** and **"Audio"** named after the [**Fourier Transform**](https://en.wikipedia.org/wiki/Fourier_transform).It analyzes song fingerprints, detects matches from local or downloaded tracks, and integrates with Spotify and YouTube for metadata and previews. It has addtional features like a REST APIs, Multiple DB support like MongoDB and SQLite.
 
 This version of **Fourio** is fully written in **Python**, powered by:
 - ⚡ **FastAPI** — backend API framework for high-performance web services  
@@ -33,132 +33,41 @@ This version of **Fourio** is fully written in **Python**, powered by:
   ```bash
   fourio/
   ├── app/
-  │   ├── api/             # Web API endpoints
-  │   ├── utils/           # Logging, file handling, general utilities
-  │   ├── db/              # Database connection and operations
-  │   ├── models/          # Data models
-  │   ├── services/        # Different services like Spotify, YouTube and WAV conversion
-  │   ├── core/            # Core fingerprinting, Spectrogram and matching logic
-  │   └── main.py          # FastAPI entry point
-  |── .env                 # Environment variables
-  ├── pyproject.toml       # uv dependencies
-  ├── requirements.txt     # Python dependencies  (Optional)
-  ├── cli_logic.py         # CLI logic        
-  ├── cli.py               # Typer CLI entry point
+  │   ├── api/                   # Web API endpoints
+  │   ├── utils/                 # Logging, file handling, general utilities
+  │   ├── db/                    # Database connection and operations
+  │   ├── models/                # Data models
+  │   ├── services/              # Different services like Spotify, YouTube and WAV conversion
+  │   ├── core/                  # Core fingerprinting, Spectrogram and matching logic
+  │   └── main.py                # FastAPI entry point
+  ├── .env                       # Environment variables
+  ├── Dockerfile                 # Docker image definition
+  ├── docker-compose.yml         # Default Docker setup
+  ├── docker-compose-mongo.yml   # MongoDB-only services
+  ├── docker-compose-hybrid.yml  # Hybrid deployment setup
+  ├── Makefile                   # Helper commands for Docker workflows
+  ├── pyproject.toml             # uv dependencies
+  ├── requirements.txt           # Python dependencies  (Optional)
+  ├── cli_logic.py               # CLI logic        
+  ├── cli.py                     # Typer CLI entry point
   ├── .gitignore
   ├── README.md
   └── LICENSE
   ```
 ---
 
+
 ## Installation
 
-### ✔ Prerequisites
+Choose one of the following setup methods:
 
-#### 🔹 Python 3.10+  
-- [Download Python](https://www.python.org/downloads/)
-
-
-#### 🔹 FFmpeg (required for audio decoding)  
-
-  **Install FFmpeg:**
-
-  - **Windows (Chocolatey — Recommended)**  
-    ```bash
-    choco install ffmpeg
-    ```
-
-      [Chocolatey install guide](https://chocolatey.org/install)
-
-  - **macOS (Homebrew)**
-    ```bash
-      brew install ffmpeg
-    ```
-  - **Linux (Ubuntu/Debian)**
-    ```bash
-      sudo apt update
-      sudo apt install ffmpeg
-    ```
-
-
-  - [**Official FFmpeg download page**](https://ffmpeg.org/download.html)
-
-  **Verify installation:**
-  ```bash
-    ffmpeg -version
-  ```
-
-🔹 uv — ultra-fast Python environment & dependency manager
-
-Install guide:
-https://github.com/astral-sh/uv
-
----
-### 🚀 Steps
-
-
-
-#### **1. Clone the repository and create a virtual environment using uv**
-
-```bash
-# Clone the repo
-git clone https://github.com/RudraNarayan94/Fourio.git
-cd fourio
-
-# Create virtual environment (using uv)
-uv venv
-
-# Install dependencies
-uv sync
-```
-
-#### **2. (Optional) Setup using Python venv + requirements.txt**
-```bash
-  # Clone the repo
-git clone https://github.com/RudraNarayan94/Fourio.git
-cd fourio
-
-# Create virtual environment (using venv)
-python -m venv venv
-
-# Activate it
-source venv/bin/activate     # macOS/Linux
-# On Windows:
-# venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
+### 🐳 Docker Setup (Recommended)
+👉 [Complete Docker-based setup guide](./README_DOCKER.md)
 
 ---
 
-
-### 🎵 Environment Setup
-
-Create a `.env` file inside folder.
-
-Use the structure defined in the sample file:  
-👉 **See `.env.example`** ([link](https://github.com/RudraNarayan94/Fourio/blob/main/.env.example))
-
-The `.env` file should include keys for:
-- Spotify API access  
-- Database configuration  
-- Backend settings  
-- YouTube API key (optional)
-
-You can generate **Spotify credentials** by creating an app at the  
-👉 Spotify Developer Dashboard:  
-https://developer.spotify.com/dashboard/
-
-Once created, copy your:
-```bash
-SPOTIFY_CLIENT_ID=your-client-id
-SPOTIFY_CLIENT_SECRET=your-client-secret
-```
-
-These credentials allow Fourio to access track metadata, album details, and playlist information.
-
----
+### 🛠 Manual Setup
+👉 [local Python environment setup](./README_MANUAL.md)
 
 
 
@@ -168,7 +77,7 @@ Run CLI
 uv run python cli.py --help
 ```
 ![alt text](static/image.png)
-## 🎧 Commands
+## CLI-Commands
 | Command                           | Description                                               |
 | --------------------------------- | --------------------------------------------------------- |
 | `find <path_to_audio_file>`       | Analyze audio file in any format and find matching fingerprints         |
@@ -176,7 +85,7 @@ uv run python cli.py --help
 | `save <path_or_dir> [--force/-f]` | Fingerprint and save local songs                          |
 | `erase`                           | Clear all stored songs and fingerprints from the database |
 <!-- | `serve --proto http --port 8000`  | Start the FastAPI backend server                          | -->
-# 🔌REST api Endpoints
+# Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -236,18 +145,11 @@ uv run python cli.py serve --proto http --port 8000
 
 ## 🚀 Future Roadmap
 
-Fourio have the potential to gradually evolve into a full-stack, Shazam-style system with a modern UI and scalable backend. Feel free to contribute or suggest features!
-
-### 🎧 Frontend (React)
-- Modern UI for song matching & downloads  
-- Microphone recording & PCM extraction  
-- Client-side fingerprint generation  
-- WebSocket for real-time matching  
-<!-- - Simple waveform visualization   -->
+Fourio have the potential to gradually evolve into a full-stack system with a modern UI and scalable backend. Feel free to contribute or suggest features!
 
 ### ⚙️ Backend (FastAPI)
 - WEBSOCKETS Endpoints for song processing & matching 
-- Redis for backend service 
+<!-- - Redis for backend service  -->
 <!-- - `/songs` → list stored entries   --> 
 <!-- - Faster async matching & caching   -->
 
@@ -258,7 +160,7 @@ Fourio have the potential to gradually evolve into a full-stack, Shazam-style sy
 - Tunable fingerprint density & thresholds  
 
 ### ☁️ Deployment
-- Docker setup  
+<!-- - Docker setup   -->
 - Optional FFmpeg/GPU acceleration  
 <!-- - Remote MongoDB sync   -->
 
