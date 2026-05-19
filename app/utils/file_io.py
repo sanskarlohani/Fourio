@@ -38,7 +38,7 @@ def FloatsToBytes(data: List[float], bits_per_sample: int) -> Tuple[Optional[byt
     """
     byte_data = bytearray()
     
-    # Use numpy array for efficient conversion to avoid slow list iteration
+    # numpy array for efficient conversion to avoid slow list iteration
     data_np = np.array(data, dtype=np.float64)
 
     try:

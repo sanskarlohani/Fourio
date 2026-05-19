@@ -11,7 +11,7 @@ router = APIRouter(prefix="/recordings", tags=["recordings"])
 logger = GetLogger()
 
 # --------------------------------------------------------------------
-# POST /recordings/save ( handleNewRecording)
+# POST /recordings/save
 # --------------------------------------------------------------------
 @router.post("/save", response_model=Dict[str, str])
 async def handle_new_recording(rec_data: RecordData):

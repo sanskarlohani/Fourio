@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
-from app.db.db_clients import NewDBClient
+from app.db.db_clients import get_db_client
 from app.models.model import DBClient
 from app.services.spotify.spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
 from app.utils.utils import GenerateSongKey
@@ -24,19 +24,14 @@ def extract_youtube_id(youtube_url: str) -> str:
         return match.group(1)
     return "" 
 
-def get_db_client() -> DBClient:
-    db_client, err = NewDBClient()
-    if err:
-        logger.error(f"Error connecting to DB: {err}")
-        raise HTTPException(status_code=500, detail="Database connection error")
-    return db_client
+
 
 def download_status(status_type: str, message: str) -> str:
     data = {"type": status_type, "message": message}
     return json.dumps(data)
 
 # --------------------------------------------------------------------
-# 1. GET /songs/total (handleTotalSongs)
+# 1. GET /songs/total
 # --------------------------------------------------------------------
 @router.get("/total", response_model=Dict[str, int])
 def handle_total_songs(db: DBClient = Depends(get_db_client)):
@@ -52,7 +47,7 @@ def handle_total_songs(db: DBClient = Depends(get_db_client)):
         pass
 
 # --------------------------------------------------------------------
-# 2. POST /songs/download (handleSongDownload)
+# 2. POST /songs/download
 # --------------------------------------------------------------------
 @router.post("/download", response_model=Dict[str, Any])
 async def handle_song_download(url: str, db: DBClient = Depends(get_db_client)):

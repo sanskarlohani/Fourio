@@ -5,7 +5,7 @@ import concurrent.futures
 from typing import List, Tuple, Optional
 from pathlib import Path
 
-from app.db.db_clients import NewDBClient
+from app.db.db_clients import get_db_client
 from app.models.model import Track
 from app.services.spotify.spotify_service import TrackInfo, PlaylistInfo, AlbumInfo 
 from app.services.spotify.youtube_service import GetYoutubeId  
@@ -25,7 +25,7 @@ logger = GetLogger()
 
 
 def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
-    """(handles ID existence check and retry)."""
+    """handles ID existence check and retry"""
     
     # 1: Initial attempt to get YT ID
     yt_id, err = GetYoutubeId(track_copy)
@@ -47,7 +47,7 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
         if err or not yt_id:
             return None, err
         
-        # 3: Check if the *new* YouTube ID also exists
+        # 3: Check if the new YouTube ID also exists
         ytid_exists, err = YtIDExists(yt_id)
         if err:
             return None, Exception(f"error checking YT ID existence (retry): {err}")
@@ -60,10 +60,10 @@ def get_yt_id(track_copy: Track) -> Tuple[Optional[str], Optional[Exception]]:
 
 def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]:
     """
-    NOTE: This uses yt-dlp as the standard Python tools (youtube-dl, pytube) are deprecated.
+    NOTE: here yt-dlp used as the standard tools. youtube-dl, pytube are deprecated.
     """
     
-    # 1. Path Validation (Simplified, relying on previous checks)
+    # 1. Path Validation
     if not os.path.isdir(path):
         return Exception("The path is not valid (not a directory)")
     
@@ -87,13 +87,13 @@ def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]
     
     for attempt in range(max_attempts):
         try:
-            subprocess.run(cmd, check=True, capture_output=True)
+            subprocess.run(cmd, check = True, capture_output = True)
             file_size, _ = GetFileSize(file_path) 
             
             if file_size > 0:
                 return None # Success
             
-            logger.warning(f"Download attempt {attempt+1} failed (file size 0). Retrying...")
+            logger.warning(f"Download attempt {attempt + 1} failed. Retrying...")
             time.sleep(1) # Wait before retrying
             
         except subprocess.CalledProcessError as e:
@@ -101,7 +101,7 @@ def download_yt_audio(id: str, path: str, file_path: str) -> Optional[Exception]
         except Exception as e:
             return Exception(f"Error during YouTube download: {e}")
             
-    return Exception("Failed to download audio stream after multiple retries (file size 0).")
+    return Exception("Failed to download audio stream after multiple retries.")
 
 
 def add_tags(file_path: str, track: Track) -> Optional[Exception]:
@@ -140,53 +140,50 @@ def add_tags(file_path: str, track: Track) -> Optional[Exception]:
 def ProcessAndSaveSong(song_file_path: str, song_title: str, song_artist: str, yt_id: str) -> Optional[Exception]:
     """End-to-end processing pipeline (DSP, DB registration, Fingerprinting)"""
     
-    db_client, err = NewDBClient()
-    if err:
-        logger.error(f"Failed to create DB client: {err}")
-        return err
+    db_client = get_db_client()
     
     with db_client: 
         # 1. Convert downloaded audio to standardized WAV (forces 44100Hz, 16-bit, Mono)
-        print("Entering ConvertToWAV")
+        # print("Entering ConvertToWAV")
         wav_file_path, err = ConvertToWAV(song_file_path, 1)
         if err:
             logger.error(f"Failed to convert to WAV: {err}")
             return err
 
         # 2. Read WAV info and extract float samples
-        print("Entering ReadWavInfo")
+        # print("Entering ReadWavInfo")
         wav_info, err = ReadWavInfo(wav_file_path)
         if err:
             logger.error(f"Failed to read WAV info: {err}")
             return err
         
-        print("Entering WavBytesToSamples")
+        # print("Entering WavBytesToSamples")
         samples, err = WavBytesToSamples(wav_info.Data)
         if err:
             logger.error(f"Error converting WAV bytes to samples: {err}")
             return err
         
-        print("Number of samples: ", len(samples))
+        # print("Number of samples: ", len(samples))
         # 3. DSP Pipeline (Spectrogram, Peaks, Fingerprints)
-        print("Entering Spectrogram")
+        # print("Entering Spectrogram")
         spectro, err = Spectrogram(samples, wav_info.SampleRate)
         if err:
             logger.error(f"Error creating spectrogram: {err}")
             return err
         
         # 4. DB Registration
-        print("Entering RegisterSong")
+        # print("Entering RegisterSong")
         song_id, err = db_client.RegisterSong(song_title, song_artist, yt_id)
         if err:
             logger.error(f"Failed to register song: {err}")
             return err
 
-        print("Entering ExtractPeaks & Fingerprint")
+        # print("Entering ExtractPeaks & Fingerprint")
         peaks = ExtractPeaks(spectro, wav_info.Duration)
         fingerprints = Fingerprint(peaks, song_id)
 
         # 5. Store Fingerprints
-        print(f"Storing fingerprints for {song_title} by {song_artist}...")
+        # print(f"Storing fingerprints for {song_title} by {song_artist}...")
         err = db_client.StoreFingerprints(fingerprints)
         if err:
             # Delete song if fingerprint storage fails
@@ -201,11 +198,11 @@ def ProcessAndSaveSong(song_file_path: str, song_title: str, song_artist: str, y
 # --- Main DL Functions ---
 
 def dl_track_concurrent(tracks: List[Track], path: str) -> Tuple[int, Optional[Exception]]:
-    """dlTrack function (concurrent download)."""
+    """concurrent downloading of tracks"""
     
     download_count = 0
     # Use ThreadPoolExecutor for semaphore concurrency management
-    with concurrent.futures.ProcessPoolExecutor(max_workers=NUM_CPUS) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers = NUM_CPUS) as executor:
         futures = []
         
         for t in tracks:
@@ -285,7 +282,8 @@ def process_single_track_task(track: Track, path: str) -> Optional[Exception]:
 def DlSingleTrack(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
     logger.info(f"Getting track info for url: {url}")
     track_info, err = TrackInfo(url)
-    if err: return 0, err
+    if err: 
+        return 0, err
     
     logger.info("Now downloading track")
     return dl_track_concurrent([track_info], save_path)
@@ -293,7 +291,8 @@ def DlSingleTrack(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
 
 def DlPlaylist(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
     tracks, err = PlaylistInfo(url)
-    if err: return 0, err
+    if err: 
+        return 0, err
 
     time.sleep(1)
     logger.info("Now downloading playlist")
@@ -302,7 +301,8 @@ def DlPlaylist(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
 
 def DlAlbum(url: str, save_path: str) -> Tuple[int, Optional[Exception]]:
     tracks, err = AlbumInfo(url)
-    if err: return 0, err
+    if err: 
+        return 0, err
 
     time.sleep(1)
     logger.info("Now downloading album")

@@ -36,7 +36,9 @@ HTTP_CLIENT = requests.Session()
 
 
 def convert_string_duration_to_seconds(duration_str: str) -> int:
-    """convertStringDurationToSeconds function."""
+    """
+    Converts a duration string in the format HH:MM:SS to seconds.
+    """
     parts = list(map(int, duration_str.split(':')))[::-1]
     seconds = 0
     if len(parts) >= 1:
@@ -116,7 +118,7 @@ def fallback_search_yt_dlp(track: Track) -> Optional[str]:
         return None
 
 
-# --- YouTube API Search (Method 1: Official API - for reference) ---
+# --- YouTube API Search (Method 1: Official API) ---
 def get_youtube_id_with_api(spTrack: Track) -> Tuple[Optional[str], Optional[Exception]]:
     if not DEVELOPER_KEY:
         return None, Exception("DEVELOPER_KEY is missing. Cannot use official YouTube API.")
